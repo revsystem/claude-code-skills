@@ -179,12 +179,6 @@ claude-code-skills/
 └── CLAUDE.md                        # セッション引き継ぎ指示（手動）
 ```
 
-### スキルとエージェントの違い
-
-このリポジトリは Claude Code の **スキル**（`~/.claude/skills/`）を管理します。スキルは Skill tool を通じて同一プロセス内で実行され、親Claudeの会話履歴に完全アクセスできます。
-
-[claude-code-plugins](https://github.com/revsystem/claude-code-plugins) が管理する **エージェント** は Agent tool で別プロセスとして起動します。handover のようなセッション文脈全体が必要なタスクにはスキル方式が適しています。
-
 ## カスタマイズ
 
 ### スキルの調整
