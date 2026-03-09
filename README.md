@@ -11,6 +11,11 @@ Claude Codeのパーソナルスキルとフックスクリプトをgit管理す
 
 Claude Codeはセッションが切れると文脈がリセットされます。`handover` スキルはセッション終了時に構造化された引き継ぎノートを生成し、次のセッションへのコンテキスト継続をサポートします。
 
+#### 参考
+
+- [Claude Code のセッション引き継ぎを自動化する](https://izanami.dev/post/3b2789ca-30ee-403f-af43-83e2c7009fb1)
+- [【Claude Code】スラッシュコマンドでセッション引き継ぎを仕組み化する](https://dev.classmethod.jp/articles/claude-code-session-handover/)
+
 #### 生成する引き継ぎノートの構成
 
 - **今回やったこと**: 作業内容と進捗
