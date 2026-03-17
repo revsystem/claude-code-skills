@@ -47,4 +47,24 @@ for hook in "${REPO_DIR}/hooks"/*.sh; do
   echo "hook: ${name} -> ${dst}"
 done
 
+# agents: ファイルごと symlink（chmod +x は不要 - .md ファイルのため）
+AGENTS_DST="${CLAUDE_DIR}/agents"
+mkdir -p "${AGENTS_DST}"
+
+for agent_file in "${REPO_DIR}/agents"/*.md; do
+  [ -f "${agent_file}" ] || continue
+  name=$(basename "${agent_file}")
+  dst="${AGENTS_DST}/${name}"
+
+  if [ -L "${dst}" ]; then
+    rm "${dst}"
+  elif [ -f "${dst}" ]; then
+    echo "WARNING: ${dst} is a real file. Replacing with symlink."
+    rm "${dst}"
+  fi
+
+  ln -sf "${agent_file}" "${dst}"
+  echo "agent: ${name} -> ${dst}"
+done
+
 echo "Done."
