@@ -65,46 +65,52 @@ description: Use when the user runs /handover, when a session is ending, when co
 ```markdown
 # セッション引き継ぎノート
 
-日時: 2026-03-08 23:41
+日時: 2026-03-17 17:26
 
 ## 今回やったこと
 
 - handoverスキルのSKILL.mdを新規作成した（~/.claude/skills/handover/SKILL.md）
-- precompact-handover.shフックを作成しsettings.jsonに登録した
+- precompact-handover.shフックを作成しsettings.jsonに登録したが、compaction中はtool使用が制限されファイルを書けないことが判明した
 - Plugin Agent方式での実装を検討したが断念した（→「捨てた選択肢」参照）
 - claude-code-skillsリポジトリを新規作成し、install.shでsymlink管理に移行した
+- stop-handover-reminder.shフックを追加し、コンテキスト70%時点で自動的にhandoverを起動する仕組みに切り替えた
 
 ## 決定事項
 
 - handoverはSkill形式で管理する。Plugin Agent形式は採用しない
-- フックはPreCompact一択。Stopフックはレスポンス終了のたびに発火するため過剰
+- 自動起動はStopフック（閾値400KB+フラグファイル）をメインにする。PreCompactフックはtool使用が制限されるためフォールバックに留める
 - hookのsystemMessageは指示注入方式（claude CLIを直接呼ぶ方式はタイムアウト・再帰リスクあり）
+- Stopフックの「頻度が高い」問題はトランスクリプトサイズ閾値とフラグファイルで解決できる（1セッション1回のみ発火）
 
 ## 捨てた選択肢と理由
 
 - Plugin Agent方式: sub-agentは親の会話履歴にアクセスできないため引き継ぎ品質が落ちる — Skill（inline実行）方式を採用
-- Stopフック: レスポンス終了のたびに発火するため頻度が高すぎる — PreCompactフックを採用
+- Stopフック（閾値なし）: 全レスポンス後に発火しすぎる — 閾値（400KB）+フラグファイルで1セッション1回に制限して採用
+- PreCompactフックをメインにする案: compaction中はtool使用が制限されファイルを書けない — Stopフック（閾値+フラグ）に変更
 - claude CLIをhookから直接呼ぶ方式: 再帰呼び出しリスクとAPIコスト・タイムアウトリスクがある — systemMessage注入方式を採用
 
 ## ハマりどころ
 
-- なし
+- PreCompactフックがsystemMessageを注入してもClaudeがファイルを書かない → compaction中はtool使用が制限される仕様のため → Stopフック方式に切り替えて解決
 
 ## 学び
 
 - Claude CodeのskillsとPlugin Agentsはfrontmatterフィールドが異なる（skills: description/matchのみ、agents: さらに多くのフィールド）
 - PreCompactフックのsystemMessageはJSON形式で出力しないとClaude Codeに無視される
+- PreCompactフックのsystemMessageはClaudeに届くが、compaction中はtool使用が制限されるためファイル書き込み不可
+- Stopフックでdecisionにblockを返すとClaudeがそのメッセージを受け取り指示として実行する
+- Stopフック入力のstop_hook_activeがtrueのときはスキップしないとdecision:block後に無限ループになる
 - symlinkでディレクトリを張る場合、`ln -sf {dir}/` とスラッシュ付きで指定しないとシンボリックリンク自体がリンクされる
 
 ## 次にやること
 
-- [必須] GitHubにリモートリポジトリ revsystem/claude-code-skills を作成してpushする
 - [任意] 他に管理すべきskillやhookが生まれた場合は随時追加
 
 ## 関連ファイル
 
 - ~/.claude/skills/handover/SKILL.md（handoverスキル本体）
-- ~/.claude/hooks/precompact-handover.sh（PreCompactフック）
+- ~/.claude/hooks/stop-handover-reminder.sh（Stopフック・メイン）
+- ~/.claude/hooks/precompact-handover.sh（PreCompactフック・フォールバック）
 - ~/.claude/settings.json（フック登録）
 - ~/go/src/github.com/revsystem/claude-code-skills/install.sh（symlink管理スクリプト）
 ```
