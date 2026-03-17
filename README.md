@@ -48,7 +48,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 #### 動作確認
 
-`.tf` ファイルが存在するプロジェクトで以下のように依頼すると、エージェントが自動的に起動します。
+`.tf` ファイルが存在するプロジェクトで以下のように依頼すると、Claude が description を判断してエージェントを起動します。
 
 ```
 このTerraformコードをレビューして
@@ -98,6 +98,7 @@ cd claude-code-skills
 ```text
 ~/.claude/skills/handover  →  {REPO}/skills/handover/
 ~/.claude/agents/terraform-code-reviewer.md  →  {REPO}/agents/terraform-code-reviewer.md
+~/.claude/hooks/stop-handover-reminder.sh  →  {REPO}/hooks/stop-handover-reminder.sh
 ~/.claude/hooks/precompact-handover.sh  →  {REPO}/hooks/precompact-handover.sh
 ```
 
@@ -246,6 +247,11 @@ claude-code-skills/
 ### 新しいスキルの追加
 
 1. `skills/{skill-name}/SKILL.md` を作成する
+2. `./install.sh` を再実行してシンボリックリンクを作成する
+
+### 新しいエージェントの追加
+
+1. `agents/{agent-name}.md` を作成する（frontmatter に `name`、`description`、`tools`、`mcpServers` を定義）
 2. `./install.sh` を再実行してシンボリックリンクを作成する
 
 ## ライセンス
