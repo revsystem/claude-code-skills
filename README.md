@@ -26,19 +26,26 @@ Claude Codeはセッションが切れると文脈がリセットされます。
 - **次にやること**: 優先度付きで未完了タスク
 - **関連ファイル**: 今回触った主要ファイルのパス
 
-#### 自動生成（PreCompact フック連携）
+#### 自動生成（Stop フック連携）
 
-コンテキスト圧縮が発生する直前に `precompact-handover.sh` フックが自動的に起動し、引き継ぎノートを生成します。長時間のセッションでコンテキストが失われる前に確実にキャプチャします。
+レスポンス終了ごとに `stop-handover-reminder.sh` フックがトランスクリプトのサイズを監視します。コンテキストが約70%（デフォルト 400KB）を超えると Claude に `/handover` の実行を促し、compaction が必要になる前に引き継ぎノートを作成します。
 
 ## フック一覧
 
-### precompact-handover.sh - PreCompact フック
+### stop-handover-reminder.sh - Stop フック（コンテキスト監視）
 
-コンテキスト圧縮の直前に発火し、`handover` スキルを使った引き継ぎノート生成をClaudeに指示します。
+レスポンス終了ごとにトランスクリプトサイズを確認し、閾値を超えた時点で一度だけ引き継ぎノートの生成を Claude に指示します。
 
+- トランスクリプトサイズが `THRESHOLD`（デフォルト 400000 bytes）を超えたとき発火
+- フラグファイル `/tmp/claude-handover-triggered-{session_id}` で1セッション1回に制限
+- `stop_hook_active: true` のときはスキップ（無限ループ防止）
 - プロジェクトに `.claude/` ディレクトリがあれば `{project}/.claude/handovers/` に保存
 - プロジェクト外の場合は `~/.claude/handovers/` に保存
 - ファイル名形式: `YYYY-MM-DD_HHmm.md`（同名が存在する場合は `_2`, `_3` を付与）
+
+### precompact-handover.sh - PreCompact フック（フォールバック）
+
+コンテキスト圧縮の直前に発火し、`handover` スキルを使った引き継ぎノート生成を Claude に指示します。Stop フックで生成が間に合わなかった場合のフォールバックとして機能します。なお、compaction 中は tool 使用が制限されるため、ファイルが書かれない場合があります。
 
 ## インストール
 
@@ -69,11 +76,22 @@ cd claude-code-skills
 ~/.claude/hooks/precompact-handover.sh  →  {REPO}/hooks/precompact-handover.sh
 ```
 
-3. **PreCompact フックを `~/.claude/settings.json` に設定する**
+3. **フックを `~/.claude/settings.json` に設定する**
 
 ```json
 {
   "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/stop-handover-reminder.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PreCompact": [
       {
         "hooks": [
@@ -104,7 +122,7 @@ cd claude-code-skills
 
 ### 自動生成（推奨）
 
-コンテキスト圧縮が発生するとフックが自動で起動し、引き継ぎノートを生成します。手動操作は不要です。
+レスポンス終了ごとに Stop フックがコンテキスト使用量を監視し、約70%を超えた時点で自動的に引き継ぎノートを生成します。コンテキスト圧縮（compaction）が必要になる前に確実にキャプチャします。
 
 ### 手動生成
 
@@ -169,7 +187,8 @@ claude-code-skills/
 │   └── handover/
 │       └── SKILL.md                 # handover スキル定義
 └── hooks/
-    └── precompact-handover.sh       # PreCompact フックスクリプト
+    ├── stop-handover-reminder.sh    # Stop フック（コンテキスト監視・メイン）
+    └── precompact-handover.sh       # PreCompact フック（フォールバック）
 ```
 
 ### インストール後の構成
@@ -179,8 +198,9 @@ claude-code-skills/
 ├── skills/
 │   └── handover  →  {REPO}/skills/handover/   # symlink
 ├── hooks/
+│   ├── stop-handover-reminder.sh  →  {REPO}/hooks/stop-handover-reminder.sh   # symlink
 │   └── precompact-handover.sh  →  {REPO}/hooks/precompact-handover.sh   # symlink
-├── settings.json                    # PreCompact フック設定（手動）
+├── settings.json                    # Stop / PreCompact フック設定（手動）
 └── CLAUDE.md                        # セッション引き継ぎ指示（手動）
 ```
 
