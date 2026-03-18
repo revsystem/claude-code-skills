@@ -3,7 +3,7 @@
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Skills-blue)](https://docs.claude.com/en/docs/claude-code/overview)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Claude Codeのパーソナルスキルとフックスクリプトをgit管理するリポジトリです。`install.sh` を実行すると `~/.claude/skills/` および `~/.claude/hooks/` にシンボリックリンクが作成され、リポジトリ上での変更が即時反映されます。
+Claude Codeのパーソナルスキル、エージェント、フックスクリプトをgit管理するリポジトリです。`install.sh` を実行すると `~/.claude/skills/`、`~/.claude/agents/`、および `~/.claude/hooks/` にシンボリックリンクが作成され、リポジトリ上での変更が即時反映されます。
 
 ## スキル一覧
 
@@ -29,6 +29,30 @@ Claude Codeはセッションが切れると文脈がリセットされます。
 #### 自動生成（Stop フック連携）
 
 レスポンス終了ごとに `stop-handover-reminder.sh` フックがトランスクリプトのサイズを監視します。コンテキストが約70%（デフォルト 400KB）を超えると Claude に `/handover` の実行を促し、compaction が必要になる前に引き継ぎノートを作成します。
+
+## エージェント一覧
+
+### terraform-code-reviewer - Terraformコードレビューエージェント
+
+Terraformコードのレビューが必要な場面で Claude が自律的に呼び出すエージェントです。セキュリティ、ベストプラクティス、パフォーマンス、コスト最適化の4つの観点から包括的な分析と改善提案を提供します。
+
+`~/.claude/agents/` に配置されたエージェントは、ユーザーがプロンプトを送信したとき Claude が description を判断して自動的に spawn します。`settings.json` への追記は不要です。
+
+#### 前提条件
+
+`uvx` コマンドが必要です（MCP サーバーの起動に使用）。
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+#### 動作確認
+
+`.tf` ファイルが存在するプロジェクトで以下のように依頼すると、Claude が description を判断してエージェントを起動します。
+
+```
+このTerraformコードをレビューして
+```
 
 ## フック一覧
 
@@ -73,6 +97,8 @@ cd claude-code-skills
 
 ```text
 ~/.claude/skills/handover  →  {REPO}/skills/handover/
+~/.claude/agents/terraform-code-reviewer.md  →  {REPO}/agents/terraform-code-reviewer.md
+~/.claude/hooks/stop-handover-reminder.sh  →  {REPO}/hooks/stop-handover-reminder.sh
 ~/.claude/hooks/precompact-handover.sh  →  {REPO}/hooks/precompact-handover.sh
 ```
 
@@ -186,6 +212,8 @@ claude-code-skills/
 ├── skills/
 │   └── handover/
 │       └── SKILL.md                 # handover スキル定義
+├── agents/
+│   └── terraform-code-reviewer.md  # terraform-code-reviewer エージェント定義
 └── hooks/
     ├── stop-handover-reminder.sh    # Stop フック（コンテキスト監視・メイン）
     └── precompact-handover.sh       # PreCompact フック（フォールバック）
@@ -197,6 +225,8 @@ claude-code-skills/
 ~/.claude/
 ├── skills/
 │   └── handover  →  {REPO}/skills/handover/   # symlink
+├── agents/
+│   └── terraform-code-reviewer.md  →  {REPO}/agents/terraform-code-reviewer.md   # symlink
 ├── hooks/
 │   ├── stop-handover-reminder.sh  →  {REPO}/hooks/stop-handover-reminder.sh   # symlink
 │   └── precompact-handover.sh  →  {REPO}/hooks/precompact-handover.sh   # symlink
@@ -217,6 +247,11 @@ claude-code-skills/
 ### 新しいスキルの追加
 
 1. `skills/{skill-name}/SKILL.md` を作成する
+2. `./install.sh` を再実行してシンボリックリンクを作成する
+
+### 新しいエージェントの追加
+
+1. `agents/{agent-name}.md` を作成する（frontmatter に `name`、`description`、`tools`、`mcpServers` を定義）
 2. `./install.sh` を再実行してシンボリックリンクを作成する
 
 ## ライセンス
