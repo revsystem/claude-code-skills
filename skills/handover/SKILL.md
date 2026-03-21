@@ -1,6 +1,9 @@
 ---
 name: handover
 description: Use when the user runs /handover, when a session is ending, when context compaction is about to happen, or when the user asks to generate a session summary, handover note, or 引き継ぎノート. Also use when context is running low and key decisions should be preserved before they are lost.
+hooks:
+  - stop-handover-reminder.sh
+  - precompact-handover.sh
 ---
 
 # セッション引き継ぎノート生成
