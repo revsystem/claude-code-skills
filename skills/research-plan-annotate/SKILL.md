@@ -1,12 +1,12 @@
 ---
 name: research-plan-annotate
-description: Deep research, plan writing, and annotation cycle for features and bug fixes that require understanding existing code. Use ONLY when the user explicitly runs /research-plan-annotate. Do NOT trigger on /plan or general planning requests — those use Claude Code's built-in plan mode instead. Produces research.md and plan.md artifacts, then hands off to superpowers for implementation.
+description: Deep research, plan writing, and annotation cycle for features and bug fixes that require understanding existing code. Use ONLY when the user explicitly runs /research-plan-annotate. Do NOT trigger on /plan or general planning requests — those use Claude Code's built-in plan mode instead. Produces research.md and plan.md artifacts with a task list ready for implementation.
 ---
 
 # Research → Plan → Annotate ワークフロー
 
 コードを書く前に「調べる→計画する→注釈で磨く」を徹底するスキル。
-実装フェーズはsuperpowersのexecuting-plansまたはsubagent-driven-developmentに引き継ぐ。
+plan.mdのタスクリスト完成後、ユーザーの指示で実装フェーズに移行する。
 
 ## いつ使うか
 
@@ -25,7 +25,7 @@ description: Deep research, plan writing, and annotation cycle for features and 
 2. Plan: research.mdを踏まえてplan.mdを書く
 3. Annotate: ユーザーの注釈を反映してplan.mdを更新する（1〜6回繰り返し）
 4. Todo: plan.mdにタスクリストを追加する
-5. Handoff: superpowersの実装スキルへ引き継ぐ
+5. Handoff: 実装フェーズへの引き継ぎ
 
 ## Phase 1: Research
 
@@ -210,24 +210,18 @@ plan.mdをユーザーに提示し、注釈サイクルへの移行を促す:
 ...
 ```
 
-タスクの粒度はsuperpowersのwriting-plansに準ずる。各タスクは2〜5分で完了できる単位に分割する。
+各タスクは2〜5分で完了できる単位に分割する。
 
 ## Phase 5: Handoff
 
-全フェーズ完了後、以下のメッセージでsuperpowersの実装スキルへ引き継ぐ:
+全フェーズ完了後、以下のメッセージで実装フェーズへ引き継ぐ:
 
 > Research → Plan → Annotateが完了しました。
 >
 > - 調査レポート: `.claude/docs/research/YYYY-MM-DD-<topic>-research.md`
 > - 実装計画: `.claude/docs/plans/YYYY-MM-DD-<feature-name>-plan.md`
 >
-> 実装フェーズに進む場合は、以下のいずれかで開始してください:
->
-> 1. `superpowers:subagent-driven-development` — タスクごとにサブエージェントをディスパッチ（推奨）
-> 2. `superpowers:executing-plans` — 現セッションで順次実行
-> 3. 「plan.mdに従って実装して」 — superpowersなしで直接実装
->
-> plan.mdにタスクリストが入っているので、実装の進捗管理に使えます。
+> plan.mdにタスクリストが入っています。「plan.mdに従って実装して」で実装を開始できます。
 
 ## 原則
 
