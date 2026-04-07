@@ -1,6 +1,7 @@
 ---
 name: research-plan-annotate
-description: Deep research, plan writing, and annotation cycle for features and bug fixes that require understanding existing code. Use ONLY when the user explicitly runs /research-plan-annotate. Do NOT trigger on /plan or general planning requests — those use Claude Code's built-in plan mode instead. Produces research.md and plan.md artifacts with a task list ready for implementation.
+description: Deep research, plan writing, and annotation cycle for features and bug fixes that require understanding existing code. Produces research.md and plan.md artifacts with a task list ready for implementation.
+disable-model-invocation: true
 ---
 
 # Research → Plan → Annotate ワークフロー
