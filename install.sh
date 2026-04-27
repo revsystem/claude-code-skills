@@ -8,26 +8,6 @@ echo "Installing from: ${REPO_DIR}"
 
 # --- ヘルパー関数 ---
 
-install_skill() {
-  local skill_dir="$1"
-  local name
-  name=$(basename "${skill_dir}")
-  local dst="${SKILLS_DST}/${name}"
-
-  if [ -L "${dst}" ]; then rm "${dst}"
-  elif [ -d "${dst}" ]; then echo "WARNING: ${dst} is a real directory. Skipping '${name}'." >&2; return; fi
-
-  ln -sf "${skill_dir}" "${dst}"
-  echo "skill: ${name} -> ${dst}"
-}
-
-resolve_hooks() {
-  local skill_dir="$1"
-  local skill_md="${skill_dir}SKILL.md"
-  [ -f "${skill_md}" ] || return 0
-  awk 'BEGIN{f=0;h=0} /^---$/{f++;next} f==1 && /^hooks:/{h=1;next} f==1 && h && /^  - /{print $2;next} f==1 && h{h=0}' "${skill_md}"
-}
-
 install_hook() {
   local hook="$1"
   local name
@@ -58,13 +38,6 @@ install_agent() {
 # --- 引数なし → 全件インストール ---
 
 if [ $# -eq 0 ]; then
-  SKILLS_DST="${CLAUDE_DIR}/skills"
-  mkdir -p "${SKILLS_DST}"
-  for skill_dir in "${REPO_DIR}/skills"/*/; do
-    [ -d "${skill_dir}" ] || continue
-    install_skill "${skill_dir}"
-  done
-
   HOOKS_DST="${CLAUDE_DIR}/hooks"
   mkdir -p "${HOOKS_DST}"
   for hook in "${REPO_DIR}/hooks"/*.sh; do
@@ -85,7 +58,6 @@ fi
 
 # --- 引数あり → 選択的インストール ---
 
-INSTALL_SKILLS=()
 INSTALL_AGENTS=()
 INSTALL_HOOKS=()
 
@@ -97,30 +69,11 @@ for arg in "$@"; do
   type="${arg%%:*}"
   name="${arg#*:}"
   case "${type}" in
-    skills) INSTALL_SKILLS+=("${name}") ;;
     agents) INSTALL_AGENTS+=("${name}") ;;
     hooks)  INSTALL_HOOKS+=("${name}") ;;
     *)      echo "WARNING: unknown type '${type}' (from '${arg}')" >&2 ;;
   esac
 done
-
-# skills + hooks 依存解決
-if [ ${#INSTALL_SKILLS[@]} -gt 0 ]; then
-  SKILLS_DST="${CLAUDE_DIR}/skills"
-  mkdir -p "${SKILLS_DST}"
-  for name in "${INSTALL_SKILLS[@]}"; do
-    skill_dir="${REPO_DIR}/skills/${name}/"
-    if [ ! -d "${skill_dir}" ]; then
-      echo "WARNING: unknown skill '${name}'" >&2
-      continue
-    fi
-    install_skill "${skill_dir}"
-    while IFS= read -r hook_name; do
-      [ -n "${hook_name}" ] || continue
-      INSTALL_HOOKS+=("${hook_name}")
-    done < <(resolve_hooks "${skill_dir}")
-  done
-fi
 
 # agents
 if [ ${#INSTALL_AGENTS[@]} -gt 0 ]; then
