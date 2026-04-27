@@ -21,43 +21,35 @@ run_install() {
   echo "${d}"
 }
 
-echo "=== Test 1: no args → install everything ==="
+echo "=== Test 1: no args → install hooks and agents (not skills) ==="
 d=$(run_install)
-assert_symlink  "${d}/skills/handover"                    "skills/handover installed"
 assert_symlink  "${d}/agents/terraform-code-reviewer.md"  "agents installed"
 assert_symlink  "${d}/hooks/stop-handover-reminder.sh"    "hooks installed"
+assert_no_entry "${d}/skills/handover"                    "skills not installed by install.sh"
 
-echo "=== Test 2: skills:handover → skill + dep hooks ==="
-d=$(run_install skills:handover)
-assert_symlink  "${d}/skills/handover"                    "handover installed"
-assert_symlink  "${d}/hooks/stop-handover-reminder.sh"    "dep hook installed"
-assert_symlink  "${d}/hooks/precompact-handover.sh"       "dep hook installed"
-assert_no_entry "${d}/agents/terraform-code-reviewer.md"  "agents not installed"
-
-echo "=== Test 3: agents:terraform-code-reviewer ==="
+echo "=== Test 2: agents:terraform-code-reviewer ==="
 d=$(run_install agents:terraform-code-reviewer)
 assert_symlink  "${d}/agents/terraform-code-reviewer.md"  "agent installed"
-assert_no_entry "${d}/skills/handover"                    "skills not installed"
 assert_no_entry "${d}/hooks/stop-handover-reminder.sh"    "hooks not installed"
 
-echo "=== Test 4: hooks:stop-handover-reminder.sh ==="
+echo "=== Test 3: hooks:stop-handover-reminder.sh ==="
 d=$(run_install hooks:stop-handover-reminder.sh)
 assert_symlink  "${d}/hooks/stop-handover-reminder.sh"    "hook installed"
 assert_no_entry "${d}/hooks/precompact-handover.sh"       "other hook not installed"
-assert_no_entry "${d}/skills/handover"                    "skills not installed"
+assert_no_entry "${d}/agents/terraform-code-reviewer.md"  "agents not installed"
 
-echo "=== Test 5: multiple targets ==="
-d=$(run_install skills:handover agents:terraform-code-reviewer)
-assert_symlink  "${d}/skills/handover"                    "skill installed"
+echo "=== Test 4: multiple targets ==="
+d=$(run_install agents:terraform-code-reviewer hooks:stop-handover-reminder.sh)
 assert_symlink  "${d}/agents/terraform-code-reviewer.md"  "agent installed"
-assert_symlink  "${d}/hooks/stop-handover-reminder.sh"    "dep hook installed"
+assert_symlink  "${d}/hooks/stop-handover-reminder.sh"    "hook installed"
+assert_no_entry "${d}/hooks/precompact-handover.sh"       "other hook not installed"
 
-echo "=== Test 6: invalid type → WARNING ==="
-warn=$(CLAUDE_CODE_DIR="${TMPDIR_BASE}/t6" bash "${REPO_DIR}/install.sh" skils:foo 2>&1 || true)
+echo "=== Test 5: invalid type → WARNING ==="
+warn=$(CLAUDE_CODE_DIR="${TMPDIR_BASE}/t5" bash "${REPO_DIR}/install.sh" skils:foo 2>&1 || true)
 echo "${warn}" | grep -q "WARNING" && pass "WARNING on invalid type" || fail "no WARNING on invalid type"
 
-echo "=== Test 7: unknown name → WARNING ==="
-warn=$(CLAUDE_CODE_DIR="${TMPDIR_BASE}/t7" bash "${REPO_DIR}/install.sh" skills:nonexistent 2>&1 || true)
+echo "=== Test 6: unknown name → WARNING ==="
+warn=$(CLAUDE_CODE_DIR="${TMPDIR_BASE}/t6" bash "${REPO_DIR}/install.sh" agents:nonexistent 2>&1 || true)
 echo "${warn}" | grep -q "WARNING" && pass "WARNING on unknown name" || fail "no WARNING on unknown name"
 
 echo ""
