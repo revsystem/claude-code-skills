@@ -25,8 +25,8 @@ if [ ! -f "$TRANSCRIPT" ]; then
 fi
 
 SIZE=$(wc -c < "$TRANSCRIPT")
-# 閾値: 400KB (コンテキストウィンドウの約70%が埋まった目安)
-THRESHOLD=400000
+# 閾値: 1MB (Sonnet 4.6の600Kトークンコンテキストに対して約60-65%が埋まった目安)
+THRESHOLD=1000000
 
 if [ "$SIZE" -gt "$THRESHOLD" ]; then
   touch "$FLAG_FILE"
