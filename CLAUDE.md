@@ -16,8 +16,7 @@
 
 ## gh skill の注意点
 
-- `gh skill install` は `~/.claude/skills/` にシンボリックリンクを作成するが、`installed_plugins.json` には登録されない（プラグイン管理とは別系統）。
-- 旧 install.sh でも同じ場所にリンクを作るため、gh skill 移行前後でリンクの見た目が変わらない。リンクのタイムスタンプで作成元を判別できる。
+- `gh skill install` は `~/.claude/skills/` にファイルをコピーする（シンボリックリンクではない）。`installed_plugins.json` には登録されない（プラグイン管理とは別系統）。
 
 ## Testing
 
