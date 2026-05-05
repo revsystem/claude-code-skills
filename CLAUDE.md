@@ -5,13 +5,19 @@
 - `skills/` - Skill plugins (slash commands). Installed via `gh skill`.
 - `agents/` - Agent definitions (.md files). Symlinked to `~/.claude/agents/` by install.sh.
 - `hooks/` - Hook scripts (.sh files). Symlinked to `~/.claude/hooks/` by install.sh.
-- `.claude/docs/` - Design specs and implementation plans.
+- `.claude/docs/` - Design specs and implementation plans (committed to git).
+- `.claude/handovers/` - Session handover notes (committed to git).
 
 ## Install
 
 `bash install.sh` creates symlinks from ~/.claude/{agents,hooks} to this repo.
 `bash install.sh TYPE:NAME ...` で個別インストール（例: `agents:terraform-code-reviewer hooks:stop-handover-reminder.sh`）。
 `gh skill install revsystem/claude-code-skills --agent claude-code --scope user` でスキルをインストール。
+
+## gh skill の注意点
+
+- `gh skill install` は `~/.claude/skills/` にシンボリックリンクを作成するが、`installed_plugins.json` には登録されない（プラグイン管理とは別系統）。
+- 旧 install.sh でも同じ場所にリンクを作るため、gh skill 移行前後でリンクの見た目が変わらない。リンクのタイムスタンプで作成元を判別できる。
 
 ## Testing
 
@@ -30,4 +36,4 @@
 
 ## Working files
 
-- `.claude/docs/` and `.claude/handovers/` are untracked working directories (not committed to git).
+- `.claude/docs/` and `.claude/handovers/` are committed to git and tracked in this repository.
