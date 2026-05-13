@@ -6,12 +6,17 @@ description: >
   に自律的に呼び出されるエージェント。
 tools: Read, Write, Edit
 mcpServers:
-  aws-terraform-mcp-server:
+  aws-documentation-mcp-server:
     type: stdio
     command: uvx
-    args: ["awslabs.terraform-mcp-server@latest"]
+    args: ["awslabs.aws-documentation-mcp-server@latest"]
     env:
       FASTMCP_LOG_LEVEL: ERROR
+      AWS_DOCUMENTATION_PARTITION: aws
+      MCP_USER_AGENT: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+  aws-knowledge-mcp-server:
+    type: http
+    url: https://knowledge-mcp.global.api.aws
 model: inherit
 color: red
 ---
