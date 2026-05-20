@@ -33,7 +33,7 @@ if [ "$SIZE" -gt "$THRESHOLD" ]; then
   cat <<EOF
 {
   "decision": "block",
-  "reason": "Context is getting full (transcript: ${SIZE} bytes). Please run the /handover skill now to save the session state before context is compacted."
+  "reason": "Context is getting full (transcript: ${SIZE} bytes). Please run the /handover skill now to save the session state before context is compacted. Also consider if any non-obvious findings from this session (gotchas, new model capabilities, workflow improvements) should be added to CLAUDE.md."
 }
 EOF
 fi
