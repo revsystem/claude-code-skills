@@ -4,7 +4,7 @@ description: >
   Terraform コードのレビューが必要なとき（.tf ファイルの確認依頼、
   セキュリティ・コスト・ベストプラクティス・パフォーマンスの検証など）
   に自律的に呼び出されるエージェント。
-tools: Read, Write, Edit
+tools: Read, Grep, Glob
 mcpServers:
   aws-documentation-mcp-server:
     type: stdio
@@ -196,10 +196,12 @@ color: red
 - 段階的アプローチ: 一度にすべてを修正するのではなく、優先度に基づいた段階的改善
 - テストの重要性: 修正前後の動作確認の重要性を強調
 - ドキュメント更新: 修正に伴うドキュメント更新の必要性
+- レビュー範囲: このエージェントはコードの読み取りと分析・改善提案までを担う。ファイルへの修正適用は行わず、提案の反映は呼び出し元のセッションが担当する
 
 ## 連携機能
 
 ### 外部ツール連携
+
 - Terraform Plan: 変更内容の事前確認
 - Terraform Validate: 構文と設定の検証
 - Security Scanners: セキュリティ脆弱性の検出
