@@ -1,10 +1,11 @@
 ---
 name: terraform-code-reviewer
 description: >
-  Terraform コードのレビューが必要なとき（.tf ファイルの確認依頼、
-  セキュリティ・コスト・ベストプラクティス・パフォーマンスの検証など）
-  に自律的に呼び出されるエージェント。
-tools: Read, Grep, Glob
+  Terraform コード（.tf）のレビューが必要なとき（.tf ファイルの確認依頼、
+  セキュリティ・ベストプラクティス・パフォーマンス・コスト最適化の検証など）
+  に自律的に呼び出されるエージェント。読み取り専用で分析し、優先度別の改善提案を
+  コード例付きで返す。ファイルは修正せず、提案の適用は呼び出し元のセッションが行う。
+tools: Read, Grep, Glob, mcp__aws-documentation-mcp-server, mcp__aws-knowledge-mcp-server
 mcpServers:
   aws-documentation-mcp-server:
     type: stdio

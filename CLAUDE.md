@@ -29,6 +29,8 @@
 ## Agent authoring rules
 
 - Agent frontmatter `mcpServers` uses mapping format (key → attributes), NOT list format.
+- Setting a `tools` allowlist excludes MCP tools unless listed. `mcpServers` connects the server, but the allowlist gates callable tools — add `mcp__<server-name>` (whole server) or `mcp__<server-name>__<tool>` for each MCP server the agent needs. Omitting `tools` inherits all tools including MCP.
+- This repo ships user-level agents (bare server names like `mcp__aws-documentation-mcp-server`). In plugin scope, MCP names are namespaced `mcp__plugin_<plugin-name>_<server-name>__<tool>`, coupling the allowlist to the plugin/marketplace name (breaks on rename). For plugin agents prefer `disallowedTools: Write, Edit` (MCP auto-inherited, read-only preserved) over a `tools` allowlist; for user agents the bare-name allowlist stays cleaner.
 - Skills frontmatter does NOT support `mcpServers`. MCP-dependent tools must be agents.
 - Agent `description` text determines when Claude autonomously spawns it — wording matters.
 - Agents placed in `~/.claude/agents/` need no settings.json changes to be spawn-eligible.
