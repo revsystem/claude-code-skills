@@ -18,13 +18,15 @@ description: Use when the user runs /handover, when a session is ending, when co
    - セッション序盤に行われた設計判断（長いセッションでは忘れがちなため）
    - エラーや詰まりがあったポイントとその解消方法
    - 現在のgit状態（ブランチ名、未コミット・未プッシュのファイル、テスト実行結果）
+   - cold-read順（次セッションが最初に読むべきファイルを、読む順に3〜5件）
+   - 駆動している Issue/PR と、関連する memory エントリ
 5. 以下のテンプレートで引き継ぎノートを生成する。
 
 ## Quality Rules
 
 - 事実ベースで書く。推測・曖昧な表現は禁止。
 - 「捨てた選択肢と理由」は最重要セクション。次回同じ議論を繰り返さないために具体的に。
-- 各セクションは必須。該当なしの場合は「なし」と記載。
+- 各セクションは原則必須。該当なしの場合は「なし」と記載（「関連メモリ」など任意明記のセクションは省略可）。
 - 簡潔に、箇条書き中心。
 - セクションごとの具体的な書き方ルールは、下の記入例の各見出し直下のコメントに記載。
 
@@ -36,6 +38,9 @@ description: Use when the user runs /handover, when a session is ending, when co
 # セッション引き継ぎノート
 
 日時: 2026-03-17 17:26
+<!-- 状態: Working/レビュー前/ブロック中/完了 等。駆動: このセッションが対応する Issue/PR を1行（無ければ「なし」） -->
+状態: Working（main 未マージ、レビュー前）
+駆動: Issue #1「セッション引き継ぎ自動化」
 
 ## リポジトリ状態
 <!-- ブランチ/未コミット/未プッシュ/テスト結果。変更なし・クリーンなら「なし（main、クリーン）」の1行で -->
@@ -43,6 +48,12 @@ description: Use when the user runs /handover, when a session is ending, when co
 - 未コミット: `skills/handover/SKILL.md`（新規）、`hooks/precompact-handover.sh`（新規）
 - 未プッシュ: 2 コミット（abc1234..def5678）
 - テスト: 未実行
+
+## 最初に読む（cold-read順）
+<!-- 予備知識ゼロで再開する人がこの順に読めば文脈を復元できるファイルを3〜5件。所要時間の目安を添える -->
+1. `skills/handover/SKILL.md` — スキル本体の現状と設計意図（≈5分）
+2. `~/.claude/settings.json` — Stop/PreCompact フックの登録状況（≈2分）
+3. `hooks/stop-handover-reminder.sh` — 自動起動ロジック（≈3分）
 
 ## 今回やったこと
 <!-- 1行目に目的・背景を書く。以降は動詞＋対象＋状態の完了形で。体言止めは使わない（「認証機能の実装」ではなく「JWT認証ミドルウェアを実装した」） -->
@@ -93,4 +104,8 @@ description: Use when the user runs /handover, when a session is ending, when co
 - ~/.claude/hooks/precompact-handover.sh（PreCompactフック・フォールバック）
 - ~/.claude/settings.json（フック登録）
 - ~/go/src/github.com/revsystem/claude-code-skills/install.sh（symlink管理スクリプト）
+
+## 関連メモリ
+<!-- このセッションに関連する ~/.claude/.../memory/ のエントリ名。無ければ省略可 -->
+- [[handover-skill-design]] — handover を Skill 形式にした設計判断の経緯
 ```
