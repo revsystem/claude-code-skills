@@ -62,19 +62,20 @@ description: Use when the user runs /handover, when a session is ending, when co
 - precompact-handover.shフックを作成しsettings.jsonに登録したが、compaction中はtool使用が制限されファイルを書けないことが判明した
 - Plugin Agent方式での実装を検討したが断念した（→「捨てた選択肢」参照）
 - claude-code-skillsリポジトリを新規作成し、install.shでsymlink管理に移行した
-- stop-handover-reminder.shフックを追加し、コンテキスト70%時点で自動的にhandoverを起動する仕組みに切り替えた
+- stop-handover-reminder.shフックを追加し、トランスクリプト末尾のusageから算出した文脈使用率が70%を超えた時点でhandoverを促す仕組みにした
 
 ## 決定事項
 <!-- 判断＋理由を1行で -->
 - handoverはSkill形式で管理する。Plugin Agent形式は採用しない
-- 自動起動はStopフック（閾値400KB+フラグファイル）をメインにする。PreCompactフックはtool使用が制限されるためフォールバックに留める
+- 自動起動はStopフック（文脈使用率70%の閾値+フラグファイル）をメインにする。PreCompactフックはtool使用が制限されるためフォールバックに留める
 - hookのsystemMessageは指示注入方式（claude CLIを直接呼ぶ方式はタイムアウト・再帰リスクあり）
-- Stopフックの「頻度が高い」問題はトランスクリプトサイズ閾値とフラグファイルで解決できる（1セッション1回のみ発火）
+- Stopフックの「頻度が高い」問題は文脈使用率の閾値とフラグファイルで解決できる（1セッション1回のみ発火）
 
 ## 捨てた選択肢と理由
 <!-- [選択肢名]: [却下した理由] — [代わりに採用したアプローチ]。Claudeが提案しユーザーに否定された案も記録する。最重要セクション -->
 - Plugin Agent方式: sub-agentは親の会話履歴にアクセスできないため引き継ぎ品質が落ちる — Skill（inline実行）方式を採用
-- Stopフック（閾値なし）: 全レスポンス後に発火しすぎる — 閾値（400KB）+フラグファイルで1セッション1回に制限して採用
+- Stopフック（閾値なし）: 全レスポンス後に発火しすぎる — 閾値（文脈使用率70%）+フラグファイルで1セッション1回に制限して採用
+- トランスクリプトのバイト数で判定する案: バイト数は文脈使用率と相関せず誤発火する（ツール多用で早すぎ／軽量セッションでは未発火）— 末尾usageのトークン数（input+cache_read+cache_creation）から文脈使用率を算出する方式に変更
 - PreCompactフックをメインにする案: compaction中はtool使用が制限されファイルを書けない — Stopフック（閾値+フラグ）に変更
 - claude CLIをhookから直接呼ぶ方式: 再帰呼び出しリスクとAPIコスト・タイムアウトリスクがある — systemMessage注入方式を採用
 
@@ -89,6 +90,7 @@ description: Use when the user runs /handover, when a session is ending, when co
 - PreCompactフックのsystemMessageはClaudeに届くが、compaction中はtool使用が制限されるためファイル書き込み不可
 - Stopフックでdecisionにblockを返すとClaudeがそのメッセージを受け取り指示として実行する
 - Stopフック入力のstop_hook_activeがtrueのときはスキップしないとdecision:block後に無限ループになる
+- Stopフック入力には文脈使用率が含まれないため、トランスクリプト末尾のusage（input+cache_read+cache_creation）からlive文脈のトークン数を算出する。文脈ウィンドウはmodel名から推定する（Opus 4.x=1M、Sonnet/Haiku=200K）。判別不能なSonnet 4.6 1M版や任意サイズはCONTEXT_WINDOW_OVERRIDEで上書きする
 - symlinkでディレクトリを張る場合、`ln -sf {dir}/` とスラッシュ付きで指定しないとシンボリックリンク自体がリンクされる
 
 ## 次にやること
