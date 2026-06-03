@@ -4,9 +4,27 @@ set -eo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="${CLAUDE_CODE_DIR:-${HOME}/.claude}"
 
+# 廃止したフック。過去の install.sh が作成した symlink を次回実行時に掃除する。
+# settings.json への登録は install.sh の管理外のため、別途ユーザーが削除する必要がある。
+OBSOLETE_HOOKS=("precompact-handover.sh")
+
 echo "Installing from: ${REPO_DIR}"
 
 # --- ヘルパー関数 ---
+
+# このリポジトリが作成した廃止フックの symlink のみを削除する。
+# readlink が REPO_DIR 配下を指すものだけ対象にし、ユーザー自作のリンクや
+# 実ファイルには触れない。
+cleanup_obsolete_hooks() {
+  local name dst
+  for name in "${OBSOLETE_HOOKS[@]}"; do
+    dst="${HOOKS_DST}/${name}"
+    if [ -L "${dst}" ] && [ "$(readlink "${dst}")" = "${REPO_DIR}/hooks/${name}" ]; then
+      rm "${dst}"
+      echo "removed obsolete hook symlink: ${dst}"
+    fi
+  done
+}
 
 install_hook() {
   local hook="$1"
@@ -40,6 +58,7 @@ install_agent() {
 if [ $# -eq 0 ]; then
   HOOKS_DST="${CLAUDE_DIR}/hooks"
   mkdir -p "${HOOKS_DST}"
+  cleanup_obsolete_hooks
   for hook in "${REPO_DIR}/hooks"/*.sh; do
     [ -f "${hook}" ] || continue
     install_hook "${hook}"
