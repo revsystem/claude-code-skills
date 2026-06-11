@@ -5,8 +5,8 @@ set -euo pipefail
 # 文脈の何%で引き継ぎ（/handover）を促すか。
 TRIGGER_PCT=70
 # 文脈ウィンドウのトークン数。空のときは下部で model 名から自動推定する
-# （Opus 4.x=1M、Sonnet/Haiku=200K）。Sonnet 4.6 は 200K版/1M版で model 名が
-# 同一で自動判別できないため、1M版を使う場合はここに明示する（例: 1000000）。
+# （Opus 4.x / Fable 5=1M、Sonnet/Haiku=200K）。Sonnet 4.6 は 200K版/1M版で
+# model 名が同一で自動判別できないため、1M版を使う場合はここに明示する（例: 1000000）。
 # モデルに関わらず任意の文脈サイズを固定したい場合もここに値を入れる。
 CONTEXT_WINDOW_OVERRIDE=""
 # ====================================================================
@@ -64,8 +64,9 @@ if [ -n "$CONTEXT_WINDOW_OVERRIDE" ]; then
   CONTEXT_WINDOW="$CONTEXT_WINDOW_OVERRIDE"
 else
   case "$MODEL" in
-    *opus-4-*) CONTEXT_WINDOW=1000000 ;;  # Opus 4.x = 1M
-    *)         CONTEXT_WINDOW=200000  ;;  # Sonnet/Haiku 既定 = 200K（Sonnet 1M は OVERRIDE で指定）
+    *opus-4-*)  CONTEXT_WINDOW=1000000 ;;  # Opus 4.x = 1M
+    *fable-5*)  CONTEXT_WINDOW=1000000 ;;  # Fable 5 = 1M（transcript には claude-fable-5 と記録される）
+    *)          CONTEXT_WINDOW=200000  ;;  # Sonnet/Haiku 既定 = 200K（Sonnet 1M は OVERRIDE で指定）
   esac
 fi
 
