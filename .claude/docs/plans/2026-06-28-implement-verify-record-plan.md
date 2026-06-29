@@ -306,7 +306,7 @@ BAK=~/.claude/skills/research-plan-annotate/SKILL.md.orig
 - [x] C-4: `grep -c 'implement-verify-record' README.md` が4以上であることを確認し、`docs(readme): list implement-verify-record skill` でコミットする
 
 ### ユニットD: ドッグフード検証（並列不可: 依存 = A, B）
-- [ ] D-1: 考慮事項の最小経路コマンドで新スキルを `~/.claude/skills/implement-verify-record/` に仮置きする
-- [ ] D-2: 新セッションで `/implement-verify-record` を引数なし実行 → plan.md 一覧提示・選択要求（自動選択しない）を確認する
-- [ ] D-3: 本計画を選択 → 着手前にゲート種別の割り当て提示と承認要求が出ること、承認まで実装に進まないことを確認する
-- [ ] D-4: 後始末（`rm -rf ~/.claude/skills/implement-verify-record`）。任意で research-plan-annotate の退避→同期→確認→復元を実施する
+- [x] D-1: 考慮事項の最小経路コマンドで新スキルを `~/.claude/skills/implement-verify-record/` に仮置きする
+- [x] D-2: 新セッションで `/implement-verify-record` を引数なし実行 → plan.md 一覧提示・選択要求（自動選択しない）を確認する
+- [x] D-3: 本計画を選択 → 着手前にゲート種別の割り当て提示と承認要求が出ること、承認まで実装に進まないことを確認する
+- [x] D-4: 後始末（`rm -rf ~/.claude/skills/implement-verify-record`）。任意経路（research-plan-annotate の退避→同期→復元）は低リスクにつき不実施
