@@ -1,6 +1,7 @@
 # [機能名] 実装計画
 
 日時: YYYY-MM-DD
+深度: minimal | standard | comprehensive（着手前に宣言した深度を記録）
 関連調査: [research.mdへのパス]
 
 ## 概要
