@@ -289,21 +289,21 @@ BAK=~/.claude/skills/research-plan-annotate/SKILL.md.orig
 大区分は独立実装可能な「ユニット」でまとめる。ユニットA/B/C は互いに異なるファイルを触り依存しないため並列実装（subagent 委譲）可能。ユニットD は A・B の成果物を同期して検証するため並列不可。
 
 ### ユニットA: 新スキル SKILL.md 作成（並列可: 依存なし）
-- [ ] A-1: `skills/implement-verify-record/SKILL.md` を変更1の内容で新規作成する
-- [ ] A-2: `head -5 skills/implement-verify-record/SKILL.md` で `name: implement-verify-record` と `disable-model-invocation: true` を確認する
-- [ ] A-3: `grep -c '^## ' skills/implement-verify-record/SKILL.md` が6以上、`grep -c 'ゲートを越えて次のユニットに進まない' skills/implement-verify-record/SKILL.md` が2であることを確認する
-- [ ] A-4: `git add` して `feat(implement-verify-record): add gated implementation skill` でコミットする
+- [x] A-1: `skills/implement-verify-record/SKILL.md` を変更1の内容で新規作成する
+- [x] A-2: `head -5 skills/implement-verify-record/SKILL.md` で `name: implement-verify-record` と `disable-model-invocation: true` を確認する
+- [x] A-3: `grep -c '^## ' skills/implement-verify-record/SKILL.md` が6以上、`grep -c 'ゲートを越えて次のユニットに進まない' skills/implement-verify-record/SKILL.md` が2であることを確認する
+- [x] A-4: `git add` して `feat(implement-verify-record): add gated implementation skill` でコミットする
 
 ### ユニットB: research-plan-annotate Phase 5 差し替え（並列可: 依存なし）
-- [ ] B-1: 変更2 の置換を `skills/research-plan-annotate/SKILL.md` に適用する
-- [ ] B-2: `grep -c 'すべてのタスクとフェーズが完了するまで停止しないでください' skills/research-plan-annotate/SKILL.md` が0、`grep -c '/implement-verify-record' skills/research-plan-annotate/SKILL.md` が1であることを確認する
-- [ ] B-3: `git add` して `feat(research-plan-annotate): hand off to implement-verify-record at Phase 5` でコミットする
+- [x] B-1: 変更2 の置換を `skills/research-plan-annotate/SKILL.md` に適用する
+- [x] B-2: `grep -c 'すべてのタスクとフェーズが完了するまで停止しないでください' skills/research-plan-annotate/SKILL.md` が0、`grep -c '/implement-verify-record' skills/research-plan-annotate/SKILL.md` が1であることを確認する
+- [x] B-3: `git add` して `feat(research-plan-annotate): hand off to implement-verify-record at Phase 5` でコミットする
 
 ### ユニットC: README 追記（並列可: 依存なし）
-- [ ] C-1: 変更3-1（スキル一覧表に行追加）を適用する
-- [ ] C-2: 変更3-2（使用方法に小節追加）を適用する
-- [ ] C-3: 変更3-3（アーキテクチャツリー更新）を適用する
-- [ ] C-4: `grep -c 'implement-verify-record' README.md` が4以上であることを確認し、`docs(readme): list implement-verify-record skill` でコミットする
+- [x] C-1: 変更3-1（スキル一覧表に行追加）を適用する
+- [x] C-2: 変更3-2（使用方法に小節追加）を適用する
+- [x] C-3: 変更3-3（アーキテクチャツリー更新）を適用する
+- [x] C-4: `grep -c 'implement-verify-record' README.md` が4以上であることを確認し、`docs(readme): list implement-verify-record skill` でコミットする
 
 ### ユニットD: ドッグフード検証（並列不可: 依存 = A, B）
 - [ ] D-1: 考慮事項の最小経路コマンドで新スキルを `~/.claude/skills/implement-verify-record/` に仮置きする
