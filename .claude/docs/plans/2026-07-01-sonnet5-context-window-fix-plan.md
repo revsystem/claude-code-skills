@@ -133,5 +133,5 @@ Sonnet 5は通常1M固定だが、ユーザーが環境変数 `CLAUDE_CODE_DISAB
 - [ ] C-2: 継承されないことが判明した場合、plan.mdの論点1の決定をB→Aに切り戻す変更を検討し、`hooks/stop-handover-reminder.sh`のcase文を修正する
 
 ### ユニットD: コミット（並列不可: 依存 = ユニットB完了）
-- [ ] D-1: `git diff` で変更内容を確認する
-- [ ] D-2: コンベンショナルコミット形式でコミットする（例: `fix(handover-reminder): detect Sonnet 5 1M context window`）。`hooks/stop-handover-reminder.sh` に加え、`.claude/docs/research/2026-07-01-sonnet5-context-window-research.md` と `.claude/docs/plans/2026-07-01-sonnet5-context-window-fix-plan.md` もコミット対象に含める（プロジェクトのファイル配置規約により`.claude/docs/`はリポジトリ管理対象）
+- [x] D-1: `git diff` で変更内容を確認する
+- [x] D-2: コンベンショナルコミット形式でコミットする（例: `fix(handover-reminder): detect Sonnet 5 1M context window`）。`hooks/stop-handover-reminder.sh` に加え、`.claude/docs/research/2026-07-01-sonnet5-context-window-research.md` と `.claude/docs/plans/2026-07-01-sonnet5-context-window-fix-plan.md` もコミット対象に含める（プロジェクトのファイル配置規約により`.claude/docs/`はリポジトリ管理対象） → commit `2a6f493`
