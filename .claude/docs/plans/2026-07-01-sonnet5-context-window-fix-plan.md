@@ -101,7 +101,9 @@ Sonnet 5は通常1M固定だが、ユーザーが環境変数 `CLAUDE_CODE_DISAB
 - A. 何もしない。ユーザーが `CLAUDE_CODE_DISABLE_1M_CONTEXT=1` を設定している場合は `CONTEXT_WINDOW_OVERRIDE=200000` を手動設定してもらう — 利点: シンプル、他の分岐と同じ「稀なケースはOVERRIDEで対応」という設計方針に一貫する / 欠点: 気づかないと`/handover`推奨が遅れる方向のズレ（危険側）になる
 - B. hookスクリプト内で `CLAUDE_CODE_DISABLE_1M_CONTEXT` 環境変数を確認し、`1`ならSonnet 5分岐でも200Kに倒す — 利点: ユーザーの手動設定が不要になり実態と自動的に一致する / 欠点: 環境変数がhookプロセスに確実に継承されるかは未検証（→「検証手順」参照）
 
-初期推奨はA（シンプルさ優先）だったが、`CLAUDE_CODE_DISABLE_1M_CONTEXT` が公式に文書化された設定名でありSonnet 4.6の`[1m]`サフィックス（transcript消失）より検知しやすいこと、ズレの方向が危険側（handover遅延）であることから、annotationサイクルで**B案を採用**することが確定した。変更2に反映済み。継承の実機検証（検証手順参照）が失敗した場合はAへのフォールバックを検討する。
+初期推奨はA（シンプルさ優先）だったが、`CLAUDE_CODE_DISABLE_1M_CONTEXT` が公式に文書化された設定名でありSonnet 4.6の`[1m]`サフィックス（transcript消失）より検知しやすいこと、ズレの方向が危険側（handover遅延）であることから、annotationサイクルで**B案を採用**することが確定した。変更2に反映済み。
+
+**実機検証結果（2026-07-02実施）:** `export CLAUDE_CODE_DISABLE_1M_CONTEXT=1` を設定した別セッションでStopフックを発火させ、デバッグログで環境変数が子プロセスに継承されることを確認した（タスクリスト ユニットC参照）。B案の前提は裏付けられ、Aへのフォールバックは不要と判明した。
 
 ### 論点2: LLM Gateway（`ANTHROPIC_BASE_URL`）利用時の扱い — A案（スコープ外）を採用
 
@@ -129,8 +131,8 @@ Sonnet 5は通常1M固定だが、ユーザーが環境変数 `CLAUDE_CODE_DISAB
 - [x] B-2: `case`文部分を切り出したテストスクリプトで、MODEL×環境変数のマトリクスを手動実行し期待値と一致することを確認する（`claude-sonnet-5`単体→1M、`claude-sonnet-5`+`CLAUDE_CODE_DISABLE_1M_CONTEXT=1`→200K、`claude-sonnet-4-6`→200K・誤マッチなし、`claude-opus-4-8`/`claude-fable-5`→既存動作を維持） → 全ケース期待通り
 
 ### ユニットC: 環境変数継承の実機確認（並列可: 実装のブロッカーではなく後日実施可）
-- [ ] C-1: 次回以降の実セッションで `CLAUDE_CODE_DISABLE_1M_CONTEXT=1` を設定した状態でClaude Codeを起動し、Stopフック内で当該環境変数が読み取れるかをデバッグログ（検証手順参照）で確認する — **本セッションでは実施不可**（自セッション自体を`CLAUDE_CODE_DISABLE_1M_CONTEXT=1`付きで再起動する必要があり、実行すると本セッションが終了してしまうため）。次回セッションでの実施を推奨
-- [ ] C-2: 継承されないことが判明した場合、plan.mdの論点1の決定をB→Aに切り戻す変更を検討し、`hooks/stop-handover-reminder.sh`のcase文を修正する
+- [x] C-1: 次回以降の実セッションで `CLAUDE_CODE_DISABLE_1M_CONTEXT=1` を設定した状態でClaude Codeを起動し、Stopフック内で当該環境変数が読み取れるかをデバッグログ（検証手順参照）で確認する → **実施完了**。別ターミナルで `export CLAUDE_CODE_DISABLE_1M_CONTEXT=1; claude` を実行し1往復会話後、`/tmp/hook-debug.log` に `DISABLE_1M=1` と記録されることを確認した（継承される）
+- [x] C-2: 継承されないことが判明した場合の切り戻し検討 → **不要と判明**。継承が確認できたため論点1（B案）はそのまま維持する
 
 ### ユニットD: コミット（並列不可: 依存 = ユニットB完了）
 - [x] D-1: `git diff` で変更内容を確認する
