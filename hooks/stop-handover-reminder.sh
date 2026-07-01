@@ -5,8 +5,13 @@ set -euo pipefail
 # 文脈の何%で引き継ぎ（/handover）を促すか。
 TRIGGER_PCT=70
 # 文脈ウィンドウのトークン数。空のときは下部で model 名から自動推定する
-# （Opus 4.x / Fable 5=1M、Sonnet/Haiku=200K）。Sonnet 4.6 は 200K版/1M版で
-# model 名が同一で自動判別できないため、1M版を使う場合はここに明示する（例: 1000000）。
+# （Opus 4.x / Fable 5 / Sonnet 5 = 1M、Sonnet 4.6以前・Haiku = 200K）。
+# Sonnet 4.6以前は200K版/1M版で model 名が同一で自動判別できないため、
+# 1M版（[1m]サフィックス指定時）を使う場合はここに明示する（例: 1000000）。
+# Sonnet 5 は常に1M（200K版は存在しない）だが、環境変数
+# CLAUDE_CODE_DISABLE_1M_CONTEXT=1 で200Kに強制している場合は下記 case 文で自動的に200Kへ倒す。
+# ANTHROPIC_BASE_URL 経由でLLM gatewayを使っている場合も1M保証されないが、
+# gateway判定の精度が低いためhookでは自動判別しない（既知の制約）。該当環境では200000を指定する。
 # モデルに関わらず任意の文脈サイズを固定したい場合もここに値を入れる。
 CONTEXT_WINDOW_OVERRIDE=""
 # ====================================================================
@@ -64,9 +69,16 @@ if [ -n "$CONTEXT_WINDOW_OVERRIDE" ]; then
   CONTEXT_WINDOW="$CONTEXT_WINDOW_OVERRIDE"
 else
   case "$MODEL" in
-    *opus-4-*)  CONTEXT_WINDOW=1000000 ;;  # Opus 4.x = 1M
-    *fable-5*)  CONTEXT_WINDOW=1000000 ;;  # Fable 5 = 1M（transcript には claude-fable-5 と記録される）
-    *)          CONTEXT_WINDOW=200000  ;;  # Sonnet/Haiku 既定 = 200K（Sonnet 1M は OVERRIDE で指定）
+    *opus-4-*) CONTEXT_WINDOW=1000000 ;;  # Opus 4.x = 1M
+    *fable-5*) CONTEXT_WINDOW=1000000 ;;  # Fable 5 = 1M（transcript には claude-fable-5 と記録される）
+    *sonnet-5*)
+      if [ "${CLAUDE_CODE_DISABLE_1M_CONTEXT:-}" = "1" ]; then
+        CONTEXT_WINDOW=200000   # Sonnet 5だが CLAUDE_CODE_DISABLE_1M_CONTEXT=1 で200Kに強制されている
+      else
+        CONTEXT_WINDOW=1000000  # Sonnet 5 = 1M固定（200K版は存在しない）
+      fi
+      ;;
+    *) CONTEXT_WINDOW=200000 ;;  # Sonnet 4.6以前/Haiku 既定 = 200K（1M版は OVERRIDE で指定）
   esac
 fi
 
