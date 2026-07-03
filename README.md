@@ -12,7 +12,7 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 | `handover` | セッション終了時に構造化された引き継ぎノートを生成し、次セッションへの文脈継続を支援する | `/handover` または「引き継ぎノートを生成して」 | Stop フックと連携 |
 | `research-plan-annotate` | 実装前に「調べる → 計画する → 注釈で磨く」を回し、`research.md` / `plan.md` を成果物とする | `/research-plan-annotate` | |
 | `implement-verify-record` | plan.md のユニットをゲート境界に、実装 → 検証 → レビュー → 承認をユニットごとに回し、`result.md` を記録する | `/implement-verify-record [トピック名]` | research-plan-annotate と連携 |
-| `create-issue-pr` | 「Issue先に作成 → PRをIssueに紐付ける」運用を自動化。単独PR作成は行わない | `/create-issue-pr` または「Issueを作ってPRを出して」 | |
+| `create-issue-pr` | 「Issue先に作成 → PRをIssueに紐付ける」運用を自動化。単独PR作成は行わない | `/create-issue-pr` | Issue・PR作成前に下書きの承認ゲートあり |
 
 スキルは Claude Code 上でインライン実行されます（自然言語や `/name` で起動）。
 
@@ -221,7 +221,9 @@ research-plan-annotate が作った plan.md を、ユニットごとにゲート
 /create-issue-pr
 ```
 
-既存Issueの有無を確認 → Issue作成（背景・やること・テスト項目のテンプレート） → ブランチpush → `Closes #<N>` を含むPR作成、の順に進みます。対象プロジェクトのCLAUDE.mdに同様の運用ルールを明記しておくと、Claudeが自然言語の指示からもこのスキルを検討しやすくなります。
+前提確認（作業ブランチ・コミット状態） → 既存Issueの確認 → Issue・PR下書きの提示と承認 → Issue作成 → ブランチpush → `Closes #<N>` を含むPR作成 → テスト結果のIssue反映、の順に進みます。Issue・PRの作成前に必ず下書きの承認を取り、承認なしにリモートへ書き込みません。本文の雛形は `assets/issue-template.md` / `assets/pr-template.md` にあります。
+
+`disable-model-invocation: true` のため自動発火はせず、起動は `/create-issue-pr` の明示実行のみです。
 
 ## アーキテクチャ
 
