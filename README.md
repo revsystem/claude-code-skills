@@ -12,6 +12,7 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 | `handover` | セッション終了時に構造化された引き継ぎノートを生成し、次セッションへの文脈継続を支援する | `/handover` または「引き継ぎノートを生成して」 | Stop フックと連携 |
 | `research-plan-annotate` | 実装前に「調べる → 計画する → 注釈で磨く」を回し、`research.md` / `plan.md` を成果物とする | `/research-plan-annotate` | |
 | `implement-verify-record` | plan.md のユニットをゲート境界に、実装 → 検証 → レビュー → 承認をユニットごとに回し、`result.md` を記録する | `/implement-verify-record [トピック名]` | research-plan-annotate と連携 |
+| `create-issue-pr` | 「Issue先に作成 → PRをIssueに紐付ける」運用を自動化。単独PR作成は行わない | `/create-issue-pr` | Issue・PR作成前に下書きの承認ゲートあり |
 
 スキルは Claude Code 上でインライン実行されます（自然言語や `/name` で起動）。
 
@@ -212,6 +213,18 @@ research-plan-annotate が作った plan.md を、ユニットごとにゲート
 
 引数はファイル名・トピックslug に照合されます。一意に決まれば対象を提示して着手し、複数候補に当たれば一覧から選ばせます。完了マークの付いた plan.md は中断セッションとみなし、未完了ユニットからの再開を確認します。
 
+### create-issue-pr
+
+「PRを作る前に対応するIssueを先に作成し、PRをIssueに紐付ける」運用を自動化するスキルです。単独でPRだけを作る操作は行いません。
+
+```
+/create-issue-pr
+```
+
+前提確認（作業ブランチ・コミット状態） → 既存Issueの確認 → Issue・PR下書きの提示と承認 → Issue作成 → ブランチpush → `Closes #<N>` を含むPR作成 → テスト結果のIssue反映、の順に進みます。Issue・PRの作成前に必ず下書きの承認を取り、承認なしにリモートへ書き込みません。本文の雛形は `assets/issue-template.md` / `assets/pr-template.md` にあります。
+
+`disable-model-invocation: true` のため自動発火はせず、起動は `/create-issue-pr` の明示実行のみです。
+
 ## アーキテクチャ
 
 ```text
@@ -222,8 +235,10 @@ claude-code-skills/
 │   │   └── SKILL.md                 # handover スキル定義
 │   ├── research-plan-annotate/
 │   │   └── SKILL.md                 # 調査・計画・注釈サイクルスキル定義
-│   └── implement-verify-record/
-│       └── SKILL.md                 # ゲート付き実装サイクルスキル定義
+│   ├── implement-verify-record/
+│   │   └── SKILL.md                 # ゲート付き実装サイクルスキル定義
+│   └── create-issue-pr/
+│       └── SKILL.md                 # Issue先行PR作成スキル定義
 ├── agents/
 │   └── terraform-code-reviewer.md  # terraform-code-reviewer エージェント定義
 └── hooks/
