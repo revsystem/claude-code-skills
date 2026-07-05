@@ -21,17 +21,19 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 | エージェント | 概要 | 起動 | モデル |
 |--------------|------|------|--------|
 | `terraform-code-reviewer` | Terraform のセキュリティ・ベストプラクティス・パフォーマンス・コストの観点からレビュー | `.tf` がある文脈で「この Terraform をレビューして」など自然言語 | inherit |
+| `a11y-reviewer` | フロントエンドのインタラクティブコンポーネントを WAI-ARIA Authoring Practices と照合してレビュー | タブ・ダイアログ等の実装・変更時に「アクセシビリティをレビューして」など自然言語 | inherit |
 
-`inherit` は Claude Code の実行モデルを継承します。`~/.claude/agents/` に配置されたエージェントは `description` に基づき自律 spawn され、`settings.json` への追記は不要です。`terraform-code-reviewer` は read-only 構成（`Read, Grep, Glob`）で、ファイルの修正適用は行わず分析と改善提案までを担います。
+`inherit` は Claude Code の実行モデルを継承します。`~/.claude/agents/` に配置されたエージェントは `description` に基づき自律 spawn され、`settings.json` への追記は不要です。`terraform-code-reviewer` と `a11y-reviewer` はいずれも read-only 構成（`Read, Grep, Glob`）で、ファイルの修正適用は行わず分析と改善提案までを担います。
 
 ### 推奨ポリシー（任意）
 
-`~/.claude/CLAUDE.md` に以下を追記すると、Terraform レビューを read-only サブエージェントへ委譲する運用を固定できます。自律 spawn の起動を確実にし、レビュー役がファイルを書き換えないことで客観的な視点を保ちます。
+`~/.claude/CLAUDE.md` に以下を追記すると、各レビューを read-only サブエージェントへ委譲する運用を固定できます。自律 spawn の起動を確実にし、レビュー役がファイルを書き換えないことで客観的な視点を保ちます。
 
 ```markdown
 ## コードレビュー方針
 
 - Terraform（.tf）のレビューは read-only の terraform-code-reviewer エージェントに委譲する
+- インタラクティブUIコンポーネントのアクセシビリティレビューは read-only の a11y-reviewer エージェントに委譲する
 - レビュー役はファイルを修正しない。提案の適用は呼び出し元のセッションが行う
 ```
 
@@ -98,6 +100,7 @@ cd claude-code-skills
 
 ```text
 ~/.claude/agents/terraform-code-reviewer.md  →  {REPO}/agents/terraform-code-reviewer.md
+~/.claude/agents/a11y-reviewer.md  →  {REPO}/agents/a11y-reviewer.md
 ~/.claude/hooks/stop-handover-reminder.sh  →  {REPO}/hooks/stop-handover-reminder.sh
 ```
 
@@ -240,7 +243,8 @@ claude-code-skills/
 │   └── create-issue-pr/
 │       └── SKILL.md                 # Issue先行PR作成スキル定義
 ├── agents/
-│   └── terraform-code-reviewer.md  # terraform-code-reviewer エージェント定義
+│   ├── terraform-code-reviewer.md  # terraform-code-reviewer エージェント定義
+│   └── a11y-reviewer.md            # a11y-reviewer エージェント定義
 └── hooks/
     └── stop-handover-reminder.sh    # Stop フック（コンテキスト監視）
 ```
