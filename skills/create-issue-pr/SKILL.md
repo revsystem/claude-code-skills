@@ -1,7 +1,13 @@
 ---
 name: create-issue-pr
-description: Issue作成 → ブランチpush → Issueに紐付いたPR作成までを、下書きの承認ゲートを挟んで一括実行する。「対応するIssueを先に作成し、PRをIssueに紐付ける」運用を徹底したいときに使う。単独でPRだけを作る操作は行わない。
+description: >
+  Create a GitHub Issue, push the branch, and open a PR linked to the
+  Issue (Closes #N) in one gated workflow, enforcing the issue-first
+  convention — never opens a standalone PR. Presents drafts of the
+  Issue and PR bodies for user approval before writing anything to the
+  remote. The Issue is the single source of truth for test items.
 disable-model-invocation: true
+allowed-tools: Bash(git status:*), Bash(git branch:*), Bash(git log:*), Bash(gh label list:*), Bash(gh issue list:*)
 ---
 
 # Issue先行PR作成
@@ -48,6 +54,8 @@ gh label list
 ```
 
 `assets/issue-template.md` と `assets/pr-template.md` を読み、それぞれの雛形に従ってIssue本文とPR本文の下書きを作成する。Issueのタイトル・ラベル・本文、PRのタイトル・本文を揃えて一度に提示し、承認を得てから次へ進む。修正指示があれば反映して再提示する。
+
+テスト項目はIssue側にのみ置く。PR本文はSummaryと `Closes #<N>` を核とし、同じチェックリストをIssueとPRに二重管理しない（実行結果の反映箇所が2つに分かれ、更新漏れの温床になるため）。
 
 PR本文の `Closes #<N>` は、この時点ではIssue番号が未確定のためプレースホルダのままでよい（手順6で埋める）。
 

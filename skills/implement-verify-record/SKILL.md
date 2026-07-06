@@ -2,6 +2,7 @@
 name: implement-verify-record
 description: Gated implementation of a unit-grouped plan.md produced by research-plan-annotate. Runs each unit through implement, verify, human review, and approval before advancing, then records a result.md. The execution-phase counterpart to research-plan-annotate.
 disable-model-invocation: true
+argument-hint: "[トピック名]"
 ---
 
 # implement-verify-record ワークフロー

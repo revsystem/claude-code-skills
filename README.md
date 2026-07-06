@@ -20,10 +20,10 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 
 | エージェント | 概要 | 起動 | モデル |
 |--------------|------|------|--------|
-| `terraform-code-reviewer` | Terraform のセキュリティ・ベストプラクティス・パフォーマンス・コストの観点からレビュー | `.tf` がある文脈で「この Terraform をレビューして」など自然言語 | inherit |
-| `a11y-reviewer` | フロントエンドのインタラクティブコンポーネントを WAI-ARIA Authoring Practices と照合してレビュー | タブ・ダイアログ等の実装・変更時に「アクセシビリティをレビューして」など自然言語 | inherit |
+| `terraform-code-reviewer` | Terraform のセキュリティ・ベストプラクティス・パフォーマンス・コストの観点からレビュー | `.tf` がある文脈で「この Terraform をレビューして」など自然言語 | sonnet |
+| `a11y-reviewer` | フロントエンドのインタラクティブコンポーネントを WAI-ARIA Authoring Practices と照合してレビュー | タブ・ダイアログ等の実装・変更時に「アクセシビリティをレビューして」など自然言語 | sonnet |
 
-`inherit` は Claude Code の実行モデルを継承します。`~/.claude/agents/` に配置されたエージェントは `description` に基づき自律 spawn され、`settings.json` への追記は不要です。`terraform-code-reviewer` と `a11y-reviewer` はいずれも read-only 構成（`Read, Grep, Glob`）で、ファイルの修正適用は行わず分析と改善提案までを担います。
+両エージェントは `model: sonnet` で実行モデルを固定しています（オーケストレーション側のモデルに関わらず、レビューは Sonnet で実行する運用のため）。`~/.claude/agents/` に配置されたエージェントは `description` に基づき自律 spawn され、`settings.json` への追記は不要です。`terraform-code-reviewer` と `a11y-reviewer` はいずれも read-only 構成（`Read, Grep, Glob`）で、ファイルの修正適用は行わず分析と改善提案までを担います。
 
 ### 推奨ポリシー（任意）
 
