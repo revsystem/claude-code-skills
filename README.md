@@ -13,8 +13,12 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 | `research-plan-annotate` | 実装前に「調べる → 計画する → 注釈で磨く」を回し、`research.md` / `plan.md` を成果物とする | `/research-plan-annotate` | |
 | `implement-verify-record` | plan.md のユニットをゲート境界に、実装 → 検証 → レビュー → 承認をユニットごとに回し、`result.md` を記録する | `/implement-verify-record [トピック名]` | research-plan-annotate と連携 |
 | `create-issue-pr` | 「Issue先に作成 → PRをIssueに紐付ける」運用を自動化。単独PR作成は行わない | `/create-issue-pr` | Issue・PR作成前に下書きの承認ゲートあり |
+| `backlog-create-issue` | Backlog の課題本文の書き方と、親子課題・Phase分割の切り方 | 「Backlog課題を作成して」など自然言語 | `using-bee` 前提。備考欄下記参照 |
+| `backlog-git-workflow` | Backlog Git でのブランチ・コミット・プルリクエストの進め方 | 「プルリクエストを作成して」など自然言語 | `using-bee` 前提。備考欄下記参照 |
 
 スキルは Claude Code 上でインライン実行されます（自然言語や `/name` で起動）。
+
+`backlog-create-issue` と `backlog-git-workflow` は、Backlog CLI（`bee`）の一般操作を担う `using-bee` と、Backlog記法の構文を担う `backlog-notation` を前提として使う補助スキルです。この2つは本リポジトリの管理外で、`bee` リポジトリ側から提供されます。導入方法は公式ドキュメント（[AI Agent Integration](https://nulab.github.io/bee/integrations/ai-agent/)）を参照してください。
 
 ## エージェント一覧
 
@@ -50,6 +54,7 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 - [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) がインストールされていること
 - `jq` がインストールされていること（フックスクリプトが使用）
 - `uvx` がインストールされていること（`terraform-code-reviewer` エージェントの MCP サーバー起動に使用）
+- `bee`（Backlog CLI）と、それが提供する `using-bee` / `backlog-notation` スキルがインストールされていること（`backlog-create-issue` / `backlog-git-workflow` スキルが前提とする。導入方法は [AI Agent Integration](https://nulab.github.io/bee/integrations/ai-agent/) 参照）
 
 uvをインストールする場合
 
@@ -228,6 +233,18 @@ research-plan-annotate が作った plan.md を、ユニットごとにゲート
 
 `disable-model-invocation: true` のため自動発火はせず、起動は `/create-issue-pr` の明示実行のみです。
 
+### backlog-create-issue
+
+Backlog の課題本文の書き方と、親子課題・Phase分割の切り方をまとめたスキルです。「Backlog課題を作成して」のような自然言語で自律的に発火します。
+
+CLI の一般的な使い方は using-bee、Backlog記法の構文は backlog-notation に委譲する設計です（いずれも `bee` リポジトリ提供、本リポジトリの管理対象外）。プルリクエストの本文は backlog-git-workflow を使います。本文の雛形は `assets/issue-template.md` にあります。
+
+### backlog-git-workflow
+
+Backlog Git でのブランチの切り方・コミットメッセージ・フェーズ分割・プルリクエストの作成と本文をまとめたスキルです。「プルリクエストを作成して」のような自然言語で自律的に発火します。Backlog Git のリポジトリでは `gh` コマンドが使えないため、`bee pr` での操作に読み替えます。
+
+CLI の一般的な使い方は using-bee、Backlog記法の構文は backlog-notation に委譲する設計です（いずれも `bee` リポジトリ提供、本リポジトリの管理対象外）。課題の本文は backlog-create-issue を使います。本文の雛形は `assets/pr-template.md` にあります。
+
 ## アーキテクチャ
 
 ```text
@@ -240,8 +257,12 @@ claude-code-skills/
 │   │   └── SKILL.md                 # 調査・計画・注釈サイクルスキル定義
 │   ├── implement-verify-record/
 │   │   └── SKILL.md                 # ゲート付き実装サイクルスキル定義
-│   └── create-issue-pr/
-│       └── SKILL.md                 # Issue先行PR作成スキル定義
+│   ├── create-issue-pr/
+│   │   └── SKILL.md                 # Issue先行PR作成スキル定義
+│   ├── backlog-create-issue/
+│   │   └── SKILL.md                 # Backlog課題作成スキル定義
+│   └── backlog-git-workflow/
+│       └── SKILL.md                 # Backlog Gitワークフロースキル定義
 ├── agents/
 │   ├── terraform-code-reviewer.md  # terraform-code-reviewer エージェント定義
 │   └── a11y-reviewer.md            # a11y-reviewer エージェント定義
