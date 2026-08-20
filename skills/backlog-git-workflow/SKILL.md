@@ -1,6 +1,8 @@
 ---
 name: backlog-git-workflow
 description: Use when working in a repository hosted on Backlog Git — naming a branch, writing commit messages, splitting work across branches, or creating a pull request and its body
+user-invocable: true
+model: sonnet
 ---
 
 # backlog-git-workflow
@@ -46,13 +48,11 @@ Backlog Git では `gh` コマンドは使えない。プルリクエストの�
 
 ## 本文の構成
 
-`assets/pr-template.md` を読んで使う。
+`assets/pr-template.md` を読んで使う。レビュワーの負担を増やさないことを最優先し、本文は端的にまとめる。各セクションの分量と、書かないもの（経緯、デプロイ手順）は `assets/pr-template.md` の「書き方」を参照。
 
 2言語で併記する場合は、英語のセクションを先に、もう一方の言語のセクションを後に置く。「English」「日本語」のような言語区切りの見出しは付けず、各セクションの見出し（`Overview` と `概要` のように）だけで言語を切り替える。1行ごとの混在はしない。1言語で運用しているチームはその言語で通す。
 
 既存のプルリクエストの冒頭に別言語の説明が付いていることがあるが、投稿後に人が手で足したものである場合がある。並び順を既存の投稿から推測せず、上のルールに従う。
-
-概要は数行に収める。何を作るか、影響範囲、この変更で動き出すかどうか（フラグで無効化されているなら明記）を書く。詳細側には変更ファイルの一覧、設計判断とその理由、レビューで見てほしい点を書く。
 
 ## 課題との紐付け
 
