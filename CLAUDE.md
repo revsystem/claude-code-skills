@@ -17,6 +17,7 @@
 ## gh skill の注意点
 
 - `gh skill install` は `~/.claude/skills/` にファイルをコピーする（シンボリックリンクではない）。`installed_plugins.json` には登録されない（プラグイン管理とは別系統）。
+- 新バージョンの配布には GitHub Release の作成が必須。`gh skill install` / `gh skill update` は git tag ではなく Release の Latest を解決するため、タグを push しただけでは旧バージョンが配布され続け、新スキルは `skill not found` になる。タグ作成後に `gh release create <tag>` まで実行すること（タグ直指定なら `--pin <tag>` で取得できる）。
 - リリースタグは必ずリモート main と同期したローカルから作成する。リモートより遅れたローカルでタグを切ると、リモートにマージ済みの変更を含まない古いコミットを指してしまう。`gh skill update` はタグのツリーSHAで差分を判定するため、古いコミットを指したタグからは新コンテンツが降りてこない。タグ作成前に `git pull`（または `git fetch` 後に最新コミットSHAを確認）すること。
 
 ## Testing
