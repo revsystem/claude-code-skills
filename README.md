@@ -15,6 +15,7 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 | `create-issue-pr` | 「Issue先に作成 → PRをIssueに紐付ける」運用を自動化。単独PR作成は行わない | `/create-issue-pr` | Issue・PR作成前に下書きの承認ゲートあり |
 | `backlog-create-issue` | Backlog の課題本文の書き方と、親子課題・Phase分割の切り方 | 「Backlog課題を作成して」など自然言語 | `using-bee` 前提。備考欄下記参照 |
 | `backlog-git-workflow` | Backlog Git でのブランチ・コミット・プルリクエストの進め方 | 「プルリクエストを作成して」など自然言語 | `using-bee` 前提。備考欄下記参照 |
+| `delegating-to-herdr-agents` | 同一 herdr ワークスペースの隣のエージェントに調査・レビューを分担させ、結果を検証して統合する | 「エージェントどうしで役割分担して作業を進めて」など自然言語 | herdr 内（`HERDR_ENV=1`）でのみ動作 |
 
 スキルは Claude Code 上でインライン実行されます（自然言語や `/name` で起動）。
 
