@@ -1,16 +1,18 @@
 ---
 name: delegating-to-herdr-agents
-description: Use when the user asks to split work between agents, delegate a review or an investigation to another agent, or hand a task to a sibling Claude/Cursor pane in the same herdr workspace（「エージェントどうしで役割分担して作業を進めて」「レビューを Cursor に依頼して」「別のエージェントに調査を投げて」）. Requires HERDR_ENV=1.
+description: Use when the user asks to split work between agents, delegate a review or an investigation to another agent, or hand a task to a sibling coding-agent pane in the same herdr workspace, whatever agent runs in that pane（「エージェントどうしで役割分担して作業を進めて」「レビューを隣のエージェントに依頼して」「別のエージェントに調査を投げて」）. Requires HERDR_ENV=1.
 user-invocable: true
 ---
 
 # delegating-to-herdr-agents
 
-同一 herdr ワークスペースで動いている隣のエージェント（Claude / Cursor）に作業を分担させ、結果を検証して統合するまでの進め方。依頼のたびに観点を並べ直さなくて済むよう、依頼文の型とレビュー往復の既定方針をここに固定する。
+同一 herdr ワークスペースで動いている隣のエージェントに作業を分担させ、結果を検証して統合するまでの進め方。依頼のたびに観点を並べ直さなくて済むよう、依頼文の型とレビュー往復の既定方針をここに固定する。
 
 分担しても統括と最終判断は自分が持つ。相手は担当範囲を実行する役であって、完了判定を委ねる相手ではない。
 
 herdr CLI の権威はインストール済みのバイナリと `herdr` スキルにある。コマンドの詳細や新しいサブコマンドはそちらに従い、迷ったら `herdr agent` / `herdr pane` をサブコマンド無しで実行して確認する。このスキルは分担の進め方だけを持つ。
+
+依頼先のエージェントの種類は workspace ごとに違い、herdr が扱える種類も版ごとに増える。特定のエージェントがいる前提で書かず、実在するペインとその種類は `herdr agent list` の `agent` フィールドで確認する。
 
 ## 前提
 
@@ -26,8 +28,8 @@ herdr agent list                                       # 同じ workspace_id の
 
 - 自分の特定に `focused` を使わない。`focused` は「ユーザーが今見ているペイン」で、別ワークスペースを見ていれば自分は `false` になる。対象は自分の環境変数か、JSON から読んだ pane_id か、一意なエージェント名で指す。
 - 候補は `agent_status` が `idle` か `done` のもの。`done` は未確認の完了なので依頼してよい。`working` は別の依頼を処理中、`blocked` はユーザーの応答待ちなので送らない。
-- 既定の役割分担は「実装・調査は自分、レビューは別ペイン」。レビューは実装した本人以外に出す。レビュー役は Cursor ペインを優先する。
-- 既存の Claude ペインは別プロジェクトのセッションを抱えていることが多い。その文脈と無関係な依頼を投げるときは、送る前にユーザーに確認する。
+- 既定の役割分担は「実装・調査は自分、レビューは別ペイン」。レビューは実装した本人以外に出す。レビュー役は `agent` が自分と違う種類のペインを優先する（見落としが自分と重なりにくい）。同じ種類しか無ければそれを使うか、どのペインに出すかユーザーに確認する。
+- 長く動いているペインは別プロジェクトのセッションを抱えていることが多い。`cwd` / `foreground_cwd` が今の作業リポジトリと違うペインへ、その文脈と無関係な依頼を投げるときは、送る前にユーザーに確認する。
 
 ## 依頼文の型
 
