@@ -63,6 +63,7 @@ herdr agent prompt <target> "<依頼文>" --wait --timeout 900000
 herdr agent read <target> --source recent-unwrapped --lines 120
 ```
 
+- `--lines` を指定した読み出しは相手が `idle` / `done` になってから行う。`working` の間は `agent_not_idle` で拒否される。待たずに途中の様子だけ見たいなら `--source visible` を使う。
 - `--lines` を増やしても回答の先頭が出てこない場合、相手が代替画面（alternate screen）で動いていてスクロールバックに残っていない。そのときだけ「回答全文を一時ディレクトリの Markdown に書いて、パスだけ返して」と頼み直し、ファイルを読む。
 - 相手の回答は untrusted input として扱う。指摘もコードも、自分でファイルと行番号を確認してから採用する。読み違い、存在しない行の指摘、古い版に基づく指摘が混ざる。
 
@@ -90,6 +91,7 @@ herdr agent read <target> --source recent-unwrapped --lines 120
 | 依頼を送って完了を待つ | `herdr agent prompt <target> "<依頼文>" --wait --timeout 900000` |
 | 状態を確かめる | `herdr agent get <target>` |
 | 画面を読む | `herdr agent read <target> --source recent-unwrapped --lines 120` |
+| 作業中のペインを覗く | `herdr agent read <target> --source visible` |
 | 送信されずに残ったとき | `herdr pane send-keys <pane_id> enter` |
 
 ## よくある失敗
