@@ -4,15 +4,21 @@ set -euo pipefail
 # === 設定 ===========================================================
 # 文脈の何%で引き継ぎ（/handover）を促すか。
 TRIGGER_PCT=70
-# 文脈ウィンドウのトークン数。空のときは下部で model 名から自動推定する
-# （Opus 4.x / Fable 5 / Sonnet 5 = 1M、Sonnet 4.6以前・Haiku = 200K）。
-# Sonnet 4.6以前は200K版/1M版で model 名が同一で自動判別できないため、
-# 1M版（[1m]サフィックス指定時）を使う場合はここに明示する（例: 1000000）。
-# Sonnet 5 は常に1M（200K版は存在しない）だが、環境変数
-# CLAUDE_CODE_DISABLE_1M_CONTEXT=1 で200Kに強制している場合は下記 case 文で自動的に200Kへ倒す。
-# ANTHROPIC_BASE_URL 経由でLLM gatewayを使っている場合も1M保証されないが、
-# gateway判定の精度が低いためhookでは自動判別しない（既知の制約）。該当環境では200000を指定する。
-# モデルに関わらず任意の文脈サイズを固定したい場合もここに値を入れる。
+# 文脈ウィンドウのトークン数。空のときは下部の case 文が model 名から推定する
+# （Opus 5 / Sonnet 5 / Fable 5 / Opus 4.7・4.8 = 1M、それ以外 = 200K）。
+# 推定の根拠は Claude Code の仕様（code.claude.com/docs/en/model-config）:
+# - Anthropic API 直結なら Fable 5.1 / Fable 5 / Sonnet 5 / Opus 4.7以降 は既定で1M。
+#   case 文は 4.7 と 4.8 だけを列挙しているので、新しい Opus 4.x が出たら足す。
+#   列挙漏れは200K側に落ちる（促しが早まるだけで、遅れるより実害が小さい）。
+# - Sonnet 5 に200K版は無く [1m] サフィックスも不要。Opus 5 には [1m] 指定が存在し、
+#   Bedrock / Google Cloud / Foundry 経由では200Kで動く。
+# - Sonnet 4.6 と Opus 4.6 は既定200Kで、[1m] 指定のときだけ1Mになる。
+# - Opus 4.5以前とHaikuは、ドキュメントの1M対応モデル一覧に載っていない。
+# ただし transcript の model 名に [1m] は現れないため（Opus 5 で実測。ドキュメントは
+# provider へ送る前に取り除くとだけ書いており transcript には言及していない）、
+# 200K版か1M版かは判別できない。1M保証の無い経路（サードパーティ提供、
+# ANTHROPIC_BASE_URL のLLM gateway）も同様に model 名からは判別できない。
+# 該当する環境と、モデルに関わらず任意の文脈サイズを固定したい場合はここに値を入れる。
 CONTEXT_WINDOW_OVERRIDE=""
 # ====================================================================
 
@@ -67,18 +73,17 @@ fi
 # --- 文脈ウィンドウの決定（OVERRIDE 優先、無ければ model から自動推定） ---
 if [ -n "$CONTEXT_WINDOW_OVERRIDE" ]; then
   CONTEXT_WINDOW="$CONTEXT_WINDOW_OVERRIDE"
+elif [ "${CLAUDE_CODE_DISABLE_1M_CONTEXT:-}" = "1" ]; then
+  # 1M無効化。ネイティブ1Mのモデルも200Kに倒れるので model 判定より先に見る
+  CONTEXT_WINDOW=200000
 else
   case "$MODEL" in
-    *opus-4-*) CONTEXT_WINDOW=1000000 ;;  # Opus 4.x = 1M
-    *fable-5*) CONTEXT_WINDOW=1000000 ;;  # Fable 5 = 1M（transcript には claude-fable-5 と記録される）
-    *sonnet-5*)
-      if [ "${CLAUDE_CODE_DISABLE_1M_CONTEXT:-}" = "1" ]; then
-        CONTEXT_WINDOW=200000   # Sonnet 5だが CLAUDE_CODE_DISABLE_1M_CONTEXT=1 で200Kに強制されている
-      else
-        CONTEXT_WINDOW=1000000  # Sonnet 5 = 1M固定（200K版は存在しない）
-      fi
-      ;;
-    *) CONTEXT_WINDOW=200000 ;;  # Sonnet 4.6以前/Haiku 既定 = 200K（1M版は OVERRIDE で指定）
+    # transcript には [1m] を除いた model 名が記録される（例: claude-opus-5）
+    *opus-5*|*sonnet-5*|*fable-5*) CONTEXT_WINDOW=1000000 ;;  # Opus 5 / Sonnet 5 / Fable 5 = 既定1M
+    *opus-4-7*|*opus-4-8*)         CONTEXT_WINDOW=1000000 ;;  # Opus 4.7 / 4.8 = 既定1M
+    # 残りは全てここ。Sonnet 4.6以前、Haiku、未知の model 名、上に無い Opus 4.x を含む。
+    # Sonnet 4.6 / Opus 4.6 で [1m] 版を使っている場合は OVERRIDE に 1000000 を書く
+    *) CONTEXT_WINDOW=200000 ;;
   esac
 fi
 

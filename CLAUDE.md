@@ -23,6 +23,7 @@
 ## Testing
 
 - `bash tests/test_install.sh` — install.sh の回帰テスト（CLAUDE_CODE_DIR 環境変数で出力先をオーバーライド）
+- `bash tests/test_handover_hook.sh` — stop-handover-reminder.sh の回帰テスト（model 名 → 文脈ウィンドウ判定）
 
 ## Skill authoring rules
 
