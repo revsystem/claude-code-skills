@@ -55,7 +55,7 @@
 
 `agent prompt --help` の実出力で確認した回避策。`--wait --until working --until blocked --timeout 10000` で投入すると、受理されて `working` に入った時点で返るため、stall 検出を残したまま次のターゲットへ進める。全ペインへ投入し終えてから `herdr agent wait <target> --timeout 900000` を順に呼んで回収する。先に終わったペインは `done` で即返る。
 
-このレビュー自体を 2 ペインへ `--wait` なしで投入して並列化し、直後に両ペインが `working` に入ることを確認した。推奨形も実測済みで、`--wait --until working --until blocked --timeout 10000` を `done` 状態のペインへ送ると 419ms で `working` を返した。stall せず即座に次のターゲットへ進める。`--wait` を省いた形には stall 検出が無いので、スキルには `--until working` 形を書く。
+このレビュー自体を 2 ペインへ `--wait` なしで投入して並列化し、直後に両ペインが `working` に入ることを確認した。推奨形も実測済みで、`--wait --until working --until blocked --timeout 10000` を `done` 状態のペインへ送ると 419ms で `working` を返した。stall せず即座に次のターゲットへ進める。ただし 2 ペインへの連続投入を実測したのは `--wait` 無しの形で、`--until working` 形は 1 ペインでしか試していない。`--wait` を省いた形には stall 検出が無いので、スキルには `--until working` 形を書く。
 
 ### 4. ペイン数とレイアウト
 
