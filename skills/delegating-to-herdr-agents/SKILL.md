@@ -1,12 +1,12 @@
 ---
 name: delegating-to-herdr-agents
-description: Use when the user asks to split work between agents, delegate a review or an investigation to another agent, or hand a task to a sibling coding-agent pane in the same herdr workspace, whatever agent runs in that pane（「エージェントどうしで役割分担して作業を進めて」「レビューを隣のエージェントに依頼して」「別のエージェントに調査を投げて」）. Requires HERDR_ENV=1.
+description: Use when the user asks to split work between agents, assign roles across panes, delegate a review or an investigation to another agent, or hand a task to a sibling coding-agent pane in the same herdr workspace, whatever agent runs in that pane（「エージェントどうしで役割分担して作業を進めて」「レビューを隣のエージェントに依頼して」「別のエージェントに調査を投げて」）. Covers the role-assignment gate, splitting panes to add agents, and parallel dispatch. Requires HERDR_ENV=1.
 user-invocable: true
 ---
 
 # delegating-to-herdr-agents
 
-同一 herdr ワークスペースで動いている隣のエージェントに作業を分担させ、結果を検証して統合するまでの進め方。依頼のたびに観点を並べ直さなくて済むよう、依頼文の型とレビュー往復の既定方針をここに固定する。
+同一 herdr ワークスペースで動いている隣のエージェントに作業を分担させ、結果を検証して統合するまでの進め方。役割を決めてから動くための手順、依頼文の型、レビュー往復の既定方針をここに固定する。
 
 分担しても統括と最終判断は自分が持つ。相手は担当範囲を実行する役であって、完了判定を委ねる相手ではない。
 
@@ -17,7 +17,46 @@ herdr CLI の権威はインストール済みのバイナリと `herdr` スキ�
 ## 前提
 
 - `HERDR_ENV` が `1` であること。herdr の外で動いている場合はその旨をユーザーに伝えて止める。
-- 依頼先は同一 workspace の既存ペインに限る。`herdr agent start` で新しいエージェントを立てない。適任のペインが無ければ、どのペインを使うかユーザーに確認する。既存ペインならユーザーが同じ画面で経緯を追えて、相手側のセッション文脈も継続する。
+- 依頼先は同一タブの既存ペインを先に使う。既存ペインならユーザーが同じ画面で経緯を追えて、相手側のセッション文脈も継続する。
+- 役割に対して既存ペインが足りないときだけ、同一タブを分割して新しいエージェントを起動する。別タブ・別ワークスペースには立てない。ユーザーの画面から見えない使い捨ての会話になる。tab や workspace の新規作成はユーザーが明示したときだけ。
+
+## 役割分担を決める
+
+分担表をユーザーに確認するまで作業を始めない。確認が済むまで `pane split`、`agent start`、他ペインへの `agent prompt`、ファイル編集のいずれもしない。ここを飛ばすと、分担したつもりで同じペインが実装とレビューを兼ねる。
+
+単発の依頼（「隣のペインにレビューだけ頼んで」）ならこの節は要らない。「相方を特定する」から始める。
+
+役割は司令塔、実装担当、レビュー担当、調査担当、レポート作成担当などで、タスクに合わせて決める。同じ役割を複数のペインが持ってよい。2 ペインで実装範囲を分ける、レビュー担当がそれぞれ別の機能を見る、同一機能を複数ペインで多角的に見る、はいずれも分担表の重複行として書く。司令塔は分担表の作成、依頼、検証、統合、報告を担う。自分で実装や調査も持つならその行も書く。
+
+| 列 | 内容 |
+|----|------|
+| ペイン | 既存の `pane_id`、または「新規」 |
+| 役割 | 司令塔 / 実装 / レビュー / 調査 など |
+| 担当範囲 | 触るファイル・ディレクトリ。実装担当が複数なら互いに排他にする |
+| kind | 新規ペインのみ。実装・調査・レポートは `claude` を既定とする。レビューは実装担当と違う kind をインストール済みのものから選び、無ければ `claude` |
+| モデル / エフォート | 新規ペインで渡せる kind のみ。渡せないなら「既定」と書く |
+
+既存ペインの kind は `herdr agent list` の `agent` フィールドで確認する。起動し直さない限り変えられないので、ユーザーに尋ねるのは新規ペインの分だけ。候補は `command -v` で実際に入っている実行ファイルに絞る。herdr が受け付ける kind は 20 種類を超えるが、全部が入っているわけではない。
+
+モデルとエフォートは司令塔が役割から決め、`agent start` の `--` 以降に起動引数として渡す。起動した相手が自分で切り替える手段は無い。フラグは kind ごとに違うので実行ファイルの `--help` で確認する。claude は `--model` と `--effort`（`low` / `medium` / `high` / `xhigh` / `max`）を持ち、cursor はモデル名の角括弧オーバーライドで指定する。渡す手段が無い kind は既定のまま起動し、分担表にそう書く。既存ペインのモデルは変えない。変えるには起動し直しになり、それまでのセッションが消える。
+
+### ペインを増やす
+
+`agent start` はシェルプロンプトにいる空ペインを要求する。agent が動いているペインには起動できないので、既存ペインの再利用と新規ペインの作成を混ぜない。
+
+```bash
+herdr pane layout --pane "$HERDR_PANE_ID"                              # area と各 rect を読む
+herdr pane split --current --direction right --cwd "$PWD" --no-focus   # .result.pane.pane_id を使う
+herdr agent start impl-1 --kind claude --pane <new-pane-id> -- --model opus --effort high
+```
+
+- 分割方向は `pane layout` の形から決める。幅が広ければ right、高く狭ければ down。同方向に重ねると使い物にならない細さになる。
+- 1 ペインあたり概ね 80 桁 24 行を下限の目安にし、これを割る分割はしない。差分や承認 UI が読めなくなる。
+- 同一タブの既定上限は司令塔 + 3。超える必要があるときはユーザーに確認し、1 ペインが複数の役割を順に担う案も併せて示す。
+- `--cwd "$PWD"` を省略しない。司令塔と同じ場所で起動させる。
+- agent 名は `[a-z][a-z0-9_-]{0,31}` で、live agent 全体で一意。日本語の役割名は使えず、`reviewer` のような一般名は別ワークスペースのペインと衝突する。`impl-1`、`review-auth` のように役割と対象を組む。
+- 起動直後は trust ダイアログなどで `blocked` になり `agent_not_ready` が返ることがある。名前は残るので `herdr agent read` で画面を確認し、ユーザーに知らせる。
+- 自分が作ったペインでも終わったら勝手に閉じない。ユーザーが経緯を追えることが、分割して起動してよい根拠になっている。
 
 ## 相方を特定する
 
@@ -28,7 +67,7 @@ herdr agent list                                       # 同じ workspace_id の
 
 - 自分の特定に `focused` を使わない。`focused` は「ユーザーが今見ているペイン」で、別ワークスペースを見ていれば自分は `false` になる。対象は自分の環境変数か、JSON から読んだ pane_id か、一意なエージェント名で指す。
 - 候補は `agent_status` が `idle` か `done` のもの。`done` は未確認の完了なので依頼してよい。`working` は別の依頼を処理中、`blocked` はユーザーの応答待ちなので送らない。
-- 既定の役割分担は「実装・調査は自分、レビューは別ペイン」。レビューは実装した本人以外に出す。レビュー役は `agent` が自分と違う種類のペインを優先する（見落としが自分と重なりにくい）。同じ種類しか無ければそれを使うか、どのペインに出すかユーザーに確認する。
+- 分担表を作ったときはそれに従う。単発の依頼なら既定は「実装・調査は自分、レビューは別ペイン」。レビューは実装した本人以外に出す。レビュー役は `agent` が実装者と違う種類のペインを優先する（見落としが重なりにくい）。同一機能を複数ペインでレビューさせるときも、レビュアーどうしの種類を散らす。同じ種類しか無ければそれを使うか、どのペインに出すかユーザーに確認する。
 - 長く動いているペインは別プロジェクトのセッションを抱えていることが多い。`cwd` / `foreground_cwd` が今の作業リポジトリと違うペインへ、その文脈と無関係な依頼を投げるときは、送る前にユーザーに確認する。
 
 ## 依頼文の型
@@ -51,11 +90,24 @@ herdr agent list                                       # 同じ workspace_id の
 herdr agent prompt <target> "<依頼文>" --wait --timeout 900000
 ```
 
-- `--wait` は投入後、最初に落ち着いた `idle` / `done` / `blocked` を待つ。この既定を `--until` で重ねて書かない。`--until` は「実行中の相手が入力を求めるまで待つ」のような特殊な待ち方をするときだけ使う。
+- `--wait` は投入後、最初に落ち着いた `idle` / `done` / `blocked` を待つ。この既定を `--until` で重ねて書かない。`--until` を使うのは、複数投入（後述）のように別の状態で返させたいときだけ。
 - 送る前に状態を確認する。相手が `blocked` だと `agent_blocked` で送信自体が拒否され、`working` だと前の依頼の完了を自分の依頼の完了と誤認する。
 - 投入後5秒以内に状態変化が観測されないと `agent_prompt_stalled` が返る。まず `herdr agent get <target>` と `herdr agent read <target>` で画面を確認する。入力欄に文字が残ったままなら `herdr pane send-keys <pane_id> enter` で送信する。
-- 待っている間は自分の担当を進めてよい。相手の担当範囲のファイルは触らない。
+- `--wait` で待つ間は自分のシェルも止まる。並行して自分の担当を進めたいなら、下の複数投入の手順で投入だけ済ませて回収を後に回す。どちらにせよ相手の担当範囲のファイルは触らない。
 - `blocked` で返ったら相手はユーザーの承認や質問を待っている。自分で代わりに答えず、画面を確認したうえでユーザーに知らせる。
+
+複数ペインへ同時に依頼するときは、投入と回収を分ける。`--wait` を付けたまま順に送ると、相手が落ち着くまで自分が止まるため逐次実行になる。
+
+```bash
+herdr agent prompt <target1> "<依頼文1>" --wait --until working --until blocked --timeout 10000
+herdr agent prompt <target2> "<依頼文2>" --wait --until working --until blocked --timeout 10000
+herdr agent wait <target1> --timeout 900000
+herdr agent wait <target2> --timeout 900000
+```
+
+- 投入側の `--until working --until blocked` は、受理されて動き出した時点で返させるための指定。5秒の stall 検出は残る。`--until blocked` を併記するのは、投入直後にダイアログへ入った相手を timeout ではなく `blocked` として捕まえるため。
+- 依頼文は相手ごとに書く。担当範囲と参照先が違うので、同じ文を流し込まない。
+- 回収の `agent wait` は直列に呼んでよい。実行は並列なので待ち時間は重なり、先に終わったペインは即座に返る。
 
 ## 結果を受け取る
 
@@ -88,7 +140,12 @@ herdr agent read <target> --source recent-unwrapped --lines 120
 |------|----------|
 | 自分の位置を知る | `printf '%s\n' "$HERDR_WORKSPACE_ID" "$HERDR_PANE_ID"` |
 | 候補ペインを探す | `herdr agent list` |
+| レイアウトを確認する | `herdr pane layout --pane "$HERDR_PANE_ID"` |
+| ペインを分割する | `herdr pane split --current --direction right --cwd "$PWD" --no-focus` |
+| 新しいエージェントを起動する | `herdr agent start <name> --kind <kind> --pane <pane_id> -- <agent-args>` |
 | 依頼を送って完了を待つ | `herdr agent prompt <target> "<依頼文>" --wait --timeout 900000` |
+| 複数へ同時に投入する | `herdr agent prompt <target> "<依頼文>" --wait --until working --until blocked --timeout 10000` |
+| 投入済みの相手を回収する | `herdr agent wait <target> --timeout 900000` |
 | 状態を確かめる | `herdr agent get <target>` |
 | 画面を読む | `herdr agent read <target> --source recent-unwrapped --lines 120` |
 | 作業中のペインを覗く | `herdr agent read <target> --source visible` |
@@ -104,4 +161,10 @@ herdr agent read <target> --source recent-unwrapped --lines 120
 | 最初から全依頼にファイル出力を要求する | 短い回答はペインから読める。ファイルは読めなかったときの回避策 |
 | 指摘をそのまま実装する | 未検証の指摘には誤りが混ざる。ファイルと行を確認してから直す |
 | `working` のペインに送る | 前の依頼の完了を自分の完了と誤認する。`idle` / `done` を確認してから送る |
-| 新しいエージェントを起動する | ユーザーの画面から見えない使い捨ての会話になる。既存ペインを使う |
+| 分担を決める前に手を動かす | 同じペインが実装とレビューを兼ねる。分担表の確認まで何もしない |
+| 適任の既存ペインがあるのに起動する | セッション文脈と経緯が捨てられる。既存ペインを先に割り当てる |
+| 別タブ・別ワークスペースで起動する | ユーザーの画面から見えない使い捨ての会話になる。同一タブを分割する |
+| agent が動いているペインに `agent start` する | 空のシェルペインが要る。分割して新しいペインを作る |
+| `--wait` を付けて順に送る | 並列のつもりが逐次になる。投入は `--until working`、回収は `agent wait` |
+| `reviewer` のような一般名を付ける | 別ワークスペースの live agent と衝突する。役割と対象を組んだ名前にする |
+| 実装担当の担当範囲が重なる | 同じファイルを同時に編集して競合する。分担表で排他にする |
