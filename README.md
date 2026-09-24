@@ -25,10 +25,11 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 
 | エージェント | 概要 | 起動 | モデル |
 |--------------|------|------|--------|
-| `terraform-code-reviewer` | Terraform のセキュリティ・ベストプラクティス・パフォーマンス・コストの観点からレビュー | `.tf` がある文脈で「この Terraform をレビューして」など自然言語 | sonnet |
 | `a11y-reviewer` | フロントエンドのインタラクティブコンポーネントを WAI-ARIA Authoring Practices と照合してレビュー | タブ・ダイアログ等の実装・変更時に「アクセシビリティをレビューして」など自然言語 | sonnet |
 
-両エージェントは `model: sonnet` で実行モデルを固定しています（オーケストレーション側のモデルに関わらず、レビューは Sonnet で実行する運用のため）。`~/.claude/agents/` に配置されたエージェントは `description` に基づき自律 spawn され、`settings.json` への追記は不要です。`terraform-code-reviewer` と `a11y-reviewer` はいずれも read-only 構成（`Read, Grep, Glob`）で、ファイルの修正適用は行わず分析と改善提案までを担います。
+`a11y-reviewer` は `model: sonnet` で実行モデルを固定しています（オーケストレーション側のモデルに関わらず、レビューは Sonnet で実行する運用のため）。`~/.claude/agents/` に配置されたエージェントは `description` に基づき自律 spawn され、`settings.json` への追記は不要です。read-only 構成（`Read, Grep, Glob`）で、ファイルの修正適用は行わず分析と改善提案までを担います。
+
+Terraform コードレビュー用の `terraform-code-reviewer` は、Claude Code プラグインとして [revsystem/claude-code-plugins](https://github.com/revsystem/claude-code-plugins) で提供しています。本リポジトリからは削除したため、以前の `install.sh` で作成した `~/.claude/agents/terraform-code-reviewer.md` の symlink は、`./install.sh` を再実行すると削除されます。プラグインのエージェントは `terraform-code-reviewer:terraform-code-reviewer-agent` という名前で呼び出されます。
 
 ### 推奨ポリシー（任意）
 
@@ -37,7 +38,7 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 ```markdown
 ## コードレビュー方針
 
-- Terraform（.tf）のレビューは read-only の terraform-code-reviewer エージェントに委譲する
+- Terraform（.tf）のレビューは read-only の terraform-code-reviewer:terraform-code-reviewer-agent エージェント（claude-code-plugins の terraform-code-reviewer プラグイン）に委譲する
 - インタラクティブUIコンポーネントのアクセシビリティレビューは read-only の a11y-reviewer エージェントに委譲する
 - レビュー役はファイルを修正しない。提案の適用は呼び出し元のセッションが行う
 ```
@@ -54,14 +55,7 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 
 - [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) がインストールされていること
 - `jq` がインストールされていること（フックスクリプトが使用）
-- `uvx` がインストールされていること（`terraform-code-reviewer` エージェントの MCP サーバー起動に使用）
 - `bee`（Backlog CLI）と、それが提供する `using-bee` / `backlog-notation` スキルがインストールされていること（`backlog-create-issue` / `backlog-git-workflow` スキルが前提とする。導入方法は [AI Agent Integration](https://nulab.github.io/bee/integrations/ai-agent/) 参照）
-
-uvをインストールする場合
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
 
 ### gh skill でインストール（スキルのみ）
 
@@ -105,7 +99,6 @@ cd claude-code-skills
 以下のシンボリックリンクが作成されます（全件インストール時）。
 
 ```text
-~/.claude/agents/terraform-code-reviewer.md  →  {REPO}/agents/terraform-code-reviewer.md
 ~/.claude/agents/a11y-reviewer.md  →  {REPO}/agents/a11y-reviewer.md
 ~/.claude/hooks/stop-handover-reminder.sh  →  {REPO}/hooks/stop-handover-reminder.sh
 ```
@@ -265,7 +258,6 @@ claude-code-skills/
 │   └── backlog-git-workflow/
 │       └── SKILL.md                 # Backlog Gitワークフロースキル定義
 ├── agents/
-│   ├── terraform-code-reviewer.md  # terraform-code-reviewer エージェント定義
 │   └── a11y-reviewer.md            # a11y-reviewer エージェント定義
 └── hooks/
     └── stop-handover-reminder.sh    # Stop フック（コンテキスト監視）

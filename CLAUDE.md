@@ -11,7 +11,7 @@
 ## Install
 
 `bash install.sh` creates symlinks from ~/.claude/{agents,hooks} to this repo.
-`bash install.sh TYPE:NAME ...` で個別インストール（例: `agents:terraform-code-reviewer hooks:stop-handover-reminder.sh`）。
+`bash install.sh TYPE:NAME ...` で個別インストール（例: `agents:a11y-reviewer hooks:stop-handover-reminder.sh`）。
 `gh skill install revsystem/claude-code-skills --agent claude-code --scope user` でスキルをインストール。
 
 ## gh skill の注意点
