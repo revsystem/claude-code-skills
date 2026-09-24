@@ -4,24 +4,28 @@ set -eo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="${CLAUDE_CODE_DIR:-${HOME}/.claude}"
 
-# 廃止したフック。過去の install.sh が作成した symlink を次回実行時に掃除する。
+# 廃止したフック・エージェント。過去の install.sh が作成した symlink を次回実行時に掃除する。
 # settings.json への登録は install.sh の管理外のため、別途ユーザーが削除する必要がある。
 OBSOLETE_HOOKS=("precompact-handover.sh")
+# terraform-code-reviewer は revsystem/claude-code-plugins のプラグインへ移管した。
+OBSOLETE_AGENTS=("terraform-code-reviewer.md")
 
 echo "Installing from: ${REPO_DIR}"
 
 # --- ヘルパー関数 ---
 
-# このリポジトリが作成した廃止フックの symlink のみを削除する。
+# このリポジトリが作成した廃止 symlink のみを削除する。
 # readlink が REPO_DIR 配下を指すものだけ対象にし、ユーザー自作のリンクや
 # 実ファイルには触れない。
-cleanup_obsolete_hooks() {
-  local name dst
-  for name in "${OBSOLETE_HOOKS[@]}"; do
-    dst="${HOOKS_DST}/${name}"
-    if [ -L "${dst}" ] && [ "$(readlink "${dst}")" = "${REPO_DIR}/hooks/${name}" ]; then
+# 引数: 配置先ディレクトリ, リポジトリ内のサブディレクトリ名, 廃止ファイル名...
+cleanup_obsolete() {
+  local dst_dir="$1" src_dir="$2" name dst
+  shift 2
+  for name in "$@"; do
+    dst="${dst_dir}/${name}"
+    if [ -L "${dst}" ] && [ "$(readlink "${dst}")" = "${REPO_DIR}/${src_dir}/${name}" ]; then
       rm "${dst}"
-      echo "removed obsolete hook symlink: ${dst}"
+      echo "removed obsolete symlink: ${dst}"
     fi
   done
 }
@@ -58,7 +62,7 @@ install_agent() {
 if [ $# -eq 0 ]; then
   HOOKS_DST="${CLAUDE_DIR}/hooks"
   mkdir -p "${HOOKS_DST}"
-  cleanup_obsolete_hooks
+  cleanup_obsolete "${HOOKS_DST}" hooks "${OBSOLETE_HOOKS[@]}"
   for hook in "${REPO_DIR}/hooks"/*.sh; do
     [ -f "${hook}" ] || continue
     install_hook "${hook}"
@@ -66,6 +70,7 @@ if [ $# -eq 0 ]; then
 
   AGENTS_DST="${CLAUDE_DIR}/agents"
   mkdir -p "${AGENTS_DST}"
+  cleanup_obsolete "${AGENTS_DST}" agents "${OBSOLETE_AGENTS[@]}"
   for agent_file in "${REPO_DIR}/agents"/*.md; do
     [ -f "${agent_file}" ] || continue
     install_agent "${agent_file}"

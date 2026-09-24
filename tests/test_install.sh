@@ -23,23 +23,23 @@ run_install() {
 
 echo "=== Test 1: no args → install hooks and agents (not skills) ==="
 d=$(run_install)
-assert_symlink  "${d}/agents/terraform-code-reviewer.md"  "agents installed"
+assert_symlink  "${d}/agents/a11y-reviewer.md"  "agents installed"
 assert_symlink  "${d}/hooks/stop-handover-reminder.sh"    "hooks installed"
 assert_no_entry "${d}/skills/handover"                    "skills not installed by install.sh"
 
-echo "=== Test 2: agents:terraform-code-reviewer ==="
-d=$(run_install agents:terraform-code-reviewer)
-assert_symlink  "${d}/agents/terraform-code-reviewer.md"  "agent installed"
+echo "=== Test 2: agents:a11y-reviewer ==="
+d=$(run_install agents:a11y-reviewer)
+assert_symlink  "${d}/agents/a11y-reviewer.md"  "agent installed"
 assert_no_entry "${d}/hooks/stop-handover-reminder.sh"    "hooks not installed"
 
 echo "=== Test 3: hooks:stop-handover-reminder.sh ==="
 d=$(run_install hooks:stop-handover-reminder.sh)
 assert_symlink  "${d}/hooks/stop-handover-reminder.sh"    "hook installed"
-assert_no_entry "${d}/agents/terraform-code-reviewer.md"  "agents not installed"
+assert_no_entry "${d}/agents/a11y-reviewer.md"  "agents not installed"
 
 echo "=== Test 4: multiple targets ==="
-d=$(run_install agents:terraform-code-reviewer hooks:stop-handover-reminder.sh)
-assert_symlink  "${d}/agents/terraform-code-reviewer.md"  "agent installed"
+d=$(run_install agents:a11y-reviewer hooks:stop-handover-reminder.sh)
+assert_symlink  "${d}/agents/a11y-reviewer.md"  "agent installed"
 assert_symlink  "${d}/hooks/stop-handover-reminder.sh"    "hook installed"
 
 echo "=== Test 5: invalid type → WARNING ==="
@@ -65,6 +65,22 @@ mkdir -p "${d}/hooks"
 ln -s "/dev/null" "${d}/hooks/precompact-handover.sh"
 CLAUDE_CODE_DIR="${d}" bash "${REPO_DIR}/install.sh" >/dev/null
 assert_symlink  "${d}/hooks/precompact-handover.sh"       "foreign symlink preserved"
+
+echo "=== Test 8: obsolete agent symlink cleanup ==="
+# 8a: 本リポジトリが作成したリンクは全件インストール時に掃除される
+d="${TMPDIR_BASE}/t8a"
+mkdir -p "${d}/agents"
+ln -s "${REPO_DIR}/agents/terraform-code-reviewer.md" "${d}/agents/terraform-code-reviewer.md"
+CLAUDE_CODE_DIR="${d}" bash "${REPO_DIR}/install.sh" >/dev/null
+assert_no_entry "${d}/agents/terraform-code-reviewer.md"  "obsolete repo symlink removed"
+assert_symlink  "${d}/agents/a11y-reviewer.md"            "current agent still installed"
+
+# 8b: 別ターゲットを指すリンク（プラグイン等）は残す
+d="${TMPDIR_BASE}/t8b"
+mkdir -p "${d}/agents"
+ln -s "/dev/null" "${d}/agents/terraform-code-reviewer.md"
+CLAUDE_CODE_DIR="${d}" bash "${REPO_DIR}/install.sh" >/dev/null
+assert_symlink  "${d}/agents/terraform-code-reviewer.md"  "foreign symlink preserved"
 
 echo ""
 echo "Results: ${PASS} passed, ${FAIL} failed"
