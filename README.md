@@ -15,11 +15,12 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 | `create-issue-pr` | 「Issue先に作成 → PRをIssueに紐付ける」運用を自動化。単独PR作成は行わない | `/create-issue-pr` | Issue・PR作成前に下書きの承認ゲートあり |
 | `backlog-create-issue` | Backlog の課題本文の書き方と、親子課題・Phase分割の切り方 | 「Backlog課題を作成して」など自然言語 | `using-bee` 前提。備考欄下記参照 |
 | `backlog-git-workflow` | Backlog Git でのブランチ・コミット・プルリクエストの進め方 | 「プルリクエストを作成して」など自然言語 | `using-bee` 前提。備考欄下記参照 |
+| `backlog-create-document` | Backlog のドキュメントの書き方。ヘッダで元の課題と前提資料を示し、本文を判断に要る分量に絞る | 「Backlogドキュメントを作成して」など自然言語 | `using-bee` 前提。備考欄下記参照 |
 | `delegating-to-herdr-agents` | 同一 herdr ワークスペースの隣のエージェントに調査・レビューを分担させ、結果を検証して統合する | 「エージェントどうしで役割分担して作業を進めて」など自然言語 | herdr 内（`HERDR_ENV=1`）でのみ動作 |
 
 スキルは Claude Code 上でインライン実行されます（自然言語や `/name` で起動）。
 
-`backlog-create-issue` と `backlog-git-workflow` は、Backlog CLI（`bee`）の一般操作を担う `using-bee` と、Backlog記法の構文を担う `backlog-notation` を前提として使う補助スキルです。この2つは本リポジトリの管理外で、`bee` リポジトリ側から提供されます。導入方法は公式ドキュメント（[AI Agent Integration](https://nulab.github.io/bee/integrations/ai-agent/)）を参照してください。
+`backlog-create-issue`、`backlog-git-workflow`、`backlog-create-document` は、Backlog CLI（`bee`）の一般操作を担う `using-bee` と、Backlog記法の構文を担う `backlog-notation` を前提として使う補助スキルです。この2つは本リポジトリの管理外で、`bee` リポジトリ側から提供されます。導入方法は公式ドキュメント（[AI Agent Integration](https://nulab.github.io/bee/integrations/ai-agent/)）を参照してください。
 
 ## エージェント一覧
 
@@ -239,6 +240,12 @@ Backlog Git でのブランチの切り方・コミットメッセージ・フ�
 
 CLI の一般的な使い方は using-bee、Backlog記法の構文は backlog-notation に委譲する設計です（いずれも `bee` リポジトリ提供、本リポジトリの管理対象外）。課題の本文は backlog-create-issue を使います。本文の雛形は `assets/pr-template.md` にあります。
 
+### backlog-create-document
+
+Backlog のドキュメントの書き方をまとめたスキルです。「Backlogドキュメントを作成して」のような自然言語で自律的に発火します。冒頭のヘッダに元の課題・前提資料・関連資料をリンクで並べ、範囲を1〜2文で宣言してから、読者の問いごとの節で判断だけを書きます。
+
+CLI の一般的な使い方は using-bee に委譲する設計です（`bee` リポジトリ提供、本リポジトリの管理対象外）。元の課題の本文は backlog-create-issue、リポジトリ内のファイルへのリンクは backlog-git-workflow を使います。本文の雛形は `assets/document-template.md` にあります。
+
 ## アーキテクチャ
 
 ```text
@@ -255,8 +262,10 @@ claude-code-skills/
 │   │   └── SKILL.md                 # Issue先行PR作成スキル定義
 │   ├── backlog-create-issue/
 │   │   └── SKILL.md                 # Backlog課題作成スキル定義
-│   └── backlog-git-workflow/
-│       └── SKILL.md                 # Backlog Gitワークフロースキル定義
+│   ├── backlog-git-workflow/
+│   │   └── SKILL.md                 # Backlog Gitワークフロースキル定義
+│   └── backlog-create-document/
+│       └── SKILL.md                 # Backlogドキュメント作成スキル定義
 ├── agents/
 │   └── a11y-reviewer.md            # a11y-reviewer エージェント定義
 └── hooks/
