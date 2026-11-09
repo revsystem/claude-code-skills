@@ -16,7 +16,7 @@ Claude Code のパーソナルスキル、エージェント、フックスク�
 | `backlog-create-issue` | Backlog の課題本文の書き方と、親子課題・Phase分割の切り方 | 「Backlog課題を作成して」など自然言語 | `using-bee` 前提。備考欄下記参照 |
 | `backlog-git-workflow` | Backlog Git でのブランチ・コミット・プルリクエストの進め方 | 「プルリクエストを作成して」など自然言語 | `using-bee` 前提。備考欄下記参照 |
 | `backlog-create-document` | Backlog のドキュメントの書き方。ヘッダで元の課題と前提資料を示し、本文を判断に要る分量に絞る | 「Backlogドキュメントを作成して」など自然言語 | `using-bee` 前提。備考欄下記参照 |
-| `delegating-to-herdr-agents` | 同一 herdr ワークスペースの隣のエージェントに調査・レビューを分担させ、結果を検証して統合する | 「エージェントどうしで役割分担して作業を進めて」など自然言語 | herdr 内（`HERDR_ENV=1`）でのみ動作 |
+| `herdr-delegate-to-agents` | 同一 herdr ワークスペースの隣のエージェントに調査・レビューを分担させ、結果を検証して統合する | 「エージェントどうしで役割分担して作業を進めて」など自然言語 | herdr 内（`HERDR_ENV=1`）でのみ動作 |
 
 スキルは Claude Code 上でインライン実行されます（自然言語や `/name` で起動）。
 

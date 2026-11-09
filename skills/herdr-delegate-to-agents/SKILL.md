@@ -1,10 +1,10 @@
 ---
-name: delegating-to-herdr-agents
+name: herdr-delegate-to-agents
 description: Use when the user asks to split work between agents, assign roles across panes, delegate a review or an investigation to another agent, or hand a task to a sibling coding-agent pane in the same herdr workspace, whatever agent runs in that pane（「エージェントどうしで役割分担して作業を進めて」「レビューを隣のエージェントに依頼して」「別のエージェントに調査を投げて」）. Also use when the work itself splits into independent branches that each need heavy reading or searching, or when a change needs review by someone other than its implementer — load it to propose a split before acting. Covers what is worth delegating, the role-assignment gate, splitting panes to add agents, and parallel dispatch. Requires HERDR_ENV=1.
 user-invocable: true
 ---
 
-# delegating-to-herdr-agents
+# herdr-delegate-to-agents
 
 同一 herdr ワークスペースで動いている隣のエージェントに作業を分担させ、結果を検証して統合するまでの進め方。役割を決めてから動くための手順、依頼文の型、レビュー往復の既定方針をここに固定する。
 
