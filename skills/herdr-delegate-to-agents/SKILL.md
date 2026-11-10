@@ -1,6 +1,6 @@
 ---
 name: herdr-delegate-to-agents
-description: Use when the user asks to split work between agents, assign roles across panes, delegate a review or an investigation to another agent, or hand a task to a sibling coding-agent pane in the same herdr workspace, whatever agent runs in that pane（「エージェントどうしで役割分担して作業を進めて」「レビューを隣のエージェントに依頼して」「別のエージェントに調査を投げて」）. Also use when the work itself splits into independent branches that each need heavy reading or searching, or when a change needs review by someone other than its implementer — load it to propose a split before acting. Covers what is worth delegating, the role-assignment gate, splitting panes to add agents, and parallel dispatch. Requires HERDR_ENV=1.
+description: Use when the user asks to split work between agents, assign roles across panes, delegate a review or an investigation to another agent, or hand a task to a sibling coding-agent pane in the same herdr workspace, whatever agent runs in that pane（「エージェントどうしで役割分担して作業を進めて」「レビューを隣のエージェントに依頼して」「別のエージェントに調査を投げて」）. Also use when the work itself splits into independent branches that each need heavy reading or searching, or when a change needs review by someone other than its implementer — load it to propose a split before acting. Covers what is worth delegating, the role-assignment gate, splitting panes to add agents, and parallel dispatch. Also covers herdr-core (hc), where child agents run as background terminals started with hc run. Requires HERDR_ENV=1 (herdr) or HC_TERMINAL_ID (herdr-core).
 user-invocable: true
 ---
 
@@ -16,7 +16,18 @@ herdr CLI の権威はインストール済みのバイナリと `herdr` スキ�
 
 ## 前提
 
-- `HERDR_ENV` が `1` であること。herdr の外で動いている場合はその旨をユーザーに伝えて止める。
+どちらの環境で動いているかを最初に確かめる。
+
+```bash
+printf '%s\n' "HERDR_ENV=$HERDR_ENV" "HC_TERMINAL_ID=$HC_TERMINAL_ID"
+```
+
+- `HC_TERMINAL_ID` が設定されていれば herdr-core（`hc`）の terminal 内にいる。`HERDR_ENV` が空でも委譲できる。役割分担から依頼文、検証、報告までの進め方はこのスキルのとおりで、操作だけを「herdr-core（hc）で進める場合」の節に読み替える。
+- `HERDR_ENV` が `1` なら herdr のペインで動いている。以下の手順をそのまま使う。
+- どちらも無ければ、その旨をユーザーに伝えて止める。
+
+herdr のペインで進めるときは次の 2 点も守る。
+
 - 依頼先は同一タブの既存ペインを先に使う。既存ペインならユーザーが同じ画面で経緯を追えて、相手側のセッション文脈も継続する。
 - 役割に対して既存ペインが足りないときだけ、同一タブを分割して新しいエージェントを起動する。別タブ・別ワークスペースには立てない。ユーザーの画面から見えない使い捨ての会話になる。tab や workspace の新規作成はユーザーが明示したときだけ。
 
@@ -149,6 +160,30 @@ herdr agent read <target> --source recent-unwrapped --lines 120
 
 作業を終えたら、誰に何を頼んだか（対象ペインと依頼の要旨）、返ってきた指摘のうち採用したものと見送ったもの、見送った理由を短く報告する。
 
+## herdr-core（hc）で進める場合
+
+hc は画面を分割せず、エージェントを自分の子の terminal としてバックグラウンドで動かす。子は自分が終わると一緒に終わる。ユーザーは `hc attach <t>` で子の画面を見られる。hc の操作の権威は `hc --skill` が出すマニュアルにあるので、最初の委譲の前に一度実行して読む。
+
+役割分担表の確認、依頼文の型、結果の検証、レビュー往復は herdr と同じに扱う。分担表の「ペイン」列には、起動する子の名前を書く。
+
+| 目的 | herdr | hc |
+|------|-------|----|
+| 自分の位置 | `$HERDR_PANE_ID` | `$HC_TERMINAL_ID` |
+| 候補を探す | `herdr agent list` | `hc ls`、`hc templates` |
+| 起動して依頼する | `pane split` → `agent start` → `agent prompt` | `hc run --bg --name <名前> --cwd <場所> <kind> "<依頼文>"` |
+| 完了を待つ | `herdr agent wait <target>` | `hc wait --children any` / `hc wait <名前>` |
+| 画面を読む | `herdr agent read <target>` | `hc read --lines <N> <名前>` |
+| キーを送る | `herdr pane send-keys` | `hc keys <名前> <キー>` |
+| 後片付け | ペインは閉じない | 結果を受け取ったら `hc kill <名前>` と `hc rm <名前>` |
+
+- 最初の依頼は `hc run` の引数で渡す。起動途中の相手に `hc send` すると取りこぼされることがある。起動後は `hc get <名前>` で最初の依頼が届いたか（`first_message.sent`）を確かめ、届いていなければ `hc read` で画面を見てから送り直す。
+- 依頼文の完了条件に「`hc send $HC_TERMINAL_ID "<結果か出力ファイルのパス>"` で報告する。行き詰まったときも同じく報告する」を入れる。`$HC_TERMINAL_ID` は依頼文を組み立てる側のシェルで展開して、実際のアドレスを渡す。
+- 子からの `<hc from="...">` は子の報告として扱い、ユーザーの指示とは区別する。作業中のターンに割り込んで届くことも、ユーザーの発言と同じ形で後から届くこともある。報告を受け取っても、成果物そのものを読んでから要約する。
+- 子が作業を始めるフォルダが初めての場所だと、claude は信頼確認のダイアログで止まる。`hc read --lines 0 <名前>` で画面を確かめ、自分で用意したフォルダなら `hc keys <名前> down enter` で答える。cursor-agent は起動引数に `--trust` を付けておけばダイアログが出ない。
+- codex は `--no-daemon` を付けて起動する。付けないと、コマンドが hc の外で実行される。既定のサンドボックスはネットワークに出られず、curl などは名前解決で失敗する。Web の取得や検索が要る仕事は、ネットワークを許可して起動するか、ほかの kind に渡す。
+- 状態を報告しないエージェント（`hc get` の `status` が `null` のもの。cursor-agent など）は、`hc wait --children all` で完了を判定できない。名前を指定した `hc wait <名前>` と、`hc send` の報告で受け取る。
+- 自分のシェルツールで `hc wait` を呼ぶ間は、自分も止まる。並行して自分の担当を進めたいなら、先に自分の作業を済ませてから待つ。
+
 ## コマンド早見表
 
 | 目的 | コマンド |
@@ -170,6 +205,7 @@ herdr agent read <target> --source recent-unwrapped --lines 120
 
 | 失敗 | 対処 |
 |------|------|
+| `HERDR_ENV` が空なので委譲できないと判断する | herdr-core の中にいるかもしれない。`HC_TERMINAL_ID` も確かめる |
 | `focused: true` で自分を探す | ユーザーが別ワークスペースを見ていると誰も該当しない。`$HERDR_PANE_ID` を使う |
 | 対象を指定せずコマンドを打つ | 別クライアントが見ているペインに当たる。pane_id かエージェント名を明示する |
 | 依頼文に背景を書かない | 相手は会話履歴を持たない。パス・課題キー・ドキュメント URL を書く |
