@@ -5,28 +5,13 @@
 
 各言語ブロックの中で、概要を先に、変更の詳細を後に置く。
 
-2言語で併記する場合は、英語のブロックを先に、もう一方の言語のブロックを後に置く。言語区切りの見出し（「English」「日本語」など）は付けず、各セクションの見出しをその言語で書くことで切り替える。1言語で運用しているチームは、下の骨組みの前半だけをその言語で書く。
+2言語で併記する場合は、日本語のブロックを先に、英語のブロックを後に置く。言語区切りの見出し（「English」「日本語」など）は付けず、各セクションの見出しをその言語で書くことで切り替える。1言語で運用しているチームは、下の骨組みのその言語の部分だけを書く。
 
 Backlog記法のプロジェクトでは、見出しを `*` / `**` に、リンクを `[[label>url]]` に変換する（backlog-notation スキル参照）。チェックリスト `- [ ]` はプルリクエスト本文では機能しないので、箇条書き `-` を使う。
 
 ## 骨組み
 
 ```markdown
-## Overview
-
-- <Why this change exists: what it unblocks, prevents or fixes, and for whom. Name the issue it serves>
-- <What this change does, and if phased, how far this PR goes>
-- <Impact: whether behavior changes now, or is gated behind a disabled flag>
-
-## Changes
-
-- <path>: <the key decision behind this change, not a summary of the diff>
-- <path>: <same>
-
-## Notes for review
-
-- <what to look at closely, or what to watch out for when applying>
-
 ## 概要
 
 - <何のための変更か。何が前に進むか、何を防ぐか、誰のためか。対応する課題キーを示す>
@@ -41,6 +26,21 @@ Backlog記法のプロジェクトでは、見出しを `*` / `**` に、リン�
 ## レビュー観点
 
 - <特に見てほしい点、または適用時の注意>
+
+## Overview
+
+- <Why this change exists: what it unblocks, prevents or fixes, and for whom. Name the issue it serves>
+- <What this change does, and if phased, how far this PR goes>
+- <Impact: whether behavior changes now, or is gated behind a disabled flag>
+
+## Changes
+
+- <path>: <the key decision behind this change, not a summary of the diff>
+- <path>: <same>
+
+## Notes for review
+
+- <what to look at closely, or what to watch out for when applying>
 ```
 
 Terraform を扱う変更では、上記の末尾に `## Plan` セクションを追加し、対象環境の `terraform plan` 実行結果をコードブロックで貼る。プレーンテキストなので言語ブロックには含めず1つだけ置く。差分がない環境は列挙しない。
