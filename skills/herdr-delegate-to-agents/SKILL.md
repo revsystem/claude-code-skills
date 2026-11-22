@@ -186,7 +186,17 @@ hc は画面を分割せず、エージェントを自分の子の terminal と�
 
 ### 子をペインに並べる（Herdr アプリで見ているときだけ）
 
-`hc run --bg` で起動した子は画面を持たず、Herdr アプリでは左下の Agents に親の下の項目として出るだけになる。ユーザーが Herdr アプリで見ているときに限り、起動した子を自分と同じタブのペインに並べる。並べるかどうかは、`herdr-app ls` に自分の terminal が見つかるかで決める。`herdr-app` が無い、Herdr のウィンドウが閉じている（`no Herdr window`）、自分が Herdr の Space の外で動いている、のいずれでも見つからないので、この手順を飛ばして hc の操作だけで進める。
+`hc run --bg` で起動した子は画面を持たず、Herdr アプリでは左下の Agents に親の下の項目として出るだけになる。ユーザーが Herdr アプリで見ているときに限り、起動した子を自分と同じタブのペインに並べる。並べるかどうかは、`herdr-app ls` に自分の terminal が見つかるかで決める。`herdr-app` が無い、Herdr のウィンドウが閉じている（`no Herdr window`）、自分が Herdr の Space の外で動いている、のどれかに当たると見つからない。見つからない場合は、この手順を飛ばして hc の操作だけで進める。
+
+`herdr-app` は Herdr アプリ（デスクトップ版）に付いている CLI で、ウィンドウの Space、タブ、ペインを操作する。WSL2 から Windows の Herdr アプリを使うときは、Windows 側の `herdr-app.exe` を直接実行しても端末に何も表示されず、パイプで受けると JSON が返る。そのため WSL2 では、次のラッパーを `~/.local/bin/herdr-app` として置いて使う。`command -v herdr-app` が見つからず、`/mnt/c/Users/<Windows のユーザー名>/AppData/Local/Programs/herdr-app/herdr-app.exe` があるなら、ユーザーにラッパーを作るかを尋ね、了承を得てから作る。作らない場合は、この手順を飛ばす。
+
+```bash
+#!/usr/bin/env bash
+set -o pipefail
+/mnt/c/Users/<Windows のユーザー名>/AppData/Local/Programs/herdr-app/herdr-app.exe "$@" | cat
+```
+
+作ったら `chmod +x ~/.local/bin/herdr-app` で実行できるようにし、`herdr-app status` が JSON を返すことを確かめる。
 
 herdr-app の ID は、マシン経由なら `wsl/t4` のように `<マシン名>/` が付き、そのマシンの中の `$HC_TERMINAL_ID`（`t4`）とは違う。自分の ID は `herdr-app ls` の `terminal` のうち、`$HC_TERMINAL_ID` と一致するか `/$HC_TERMINAL_ID` で終わるものを使う。子の ID には同じ接頭辞を付ける。
 
