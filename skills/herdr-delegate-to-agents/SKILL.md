@@ -193,7 +193,7 @@ hc は画面を分割せず、エージェントを自分の子の terminal と�
 ```bash
 #!/usr/bin/env bash
 set -o pipefail
-/mnt/c/Users/<Windows のユーザー名>/AppData/Local/Programs/herdr-app/herdr-app.exe "$@" | cat
+"/mnt/c/Users/<Windows のユーザー名>/AppData/Local/Programs/herdr-app/herdr-app.exe" "$@" | cat
 ```
 
 作ったら `chmod +x ~/.local/bin/herdr-app` で実行できるようにし、`herdr-app status` が JSON を返すことを確かめる。
