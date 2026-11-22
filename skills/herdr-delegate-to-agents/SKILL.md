@@ -184,6 +184,23 @@ hc は画面を分割せず、エージェントを自分の子の terminal と�
 - 状態を報告しないエージェント（`hc get` の `status` が `null` のもの。cursor-agent など）は、`hc wait --children all` で完了を判定できない。名前を指定した `hc wait <名前>` と、`hc send` の報告で受け取る。
 - 自分のシェルツールで `hc wait` を呼ぶ間は、自分も止まる。並行して自分の担当を進めたいなら、先に自分の作業を済ませてから待つ。
 
+### 子をペインに並べる（Herdr アプリで見ているときだけ）
+
+`hc run --bg` で起動した子は画面を持たず、Herdr アプリでは左下の Agents に親の下の項目として出るだけになる。ユーザーが Herdr アプリで見ているときに限り、起動した子を自分と同じタブのペインに並べる。並べるかどうかは、`herdr-app ls` に自分の terminal が見つかるかで決める。`herdr-app` が無い、Herdr のウィンドウが閉じている（`no Herdr window`）、自分が Herdr の Space の外で動いている、のいずれでも見つからないので、この手順を飛ばして hc の操作だけで進める。
+
+herdr-app の ID は、マシン経由なら `wsl/t4` のように `<マシン名>/` が付き、そのマシンの中の `$HC_TERMINAL_ID`（`t4`）とは違う。自分の ID は `herdr-app ls` の `terminal` のうち、`$HC_TERMINAL_ID` と一致するか `/$HC_TERMINAL_ID` で終わるものを使う。子の ID には同じ接頭辞を付ける。
+
+```bash
+herdr-app do terminal.park --terminal <子の ID>
+herdr-app do pane.focus --terminal <自分の ID>
+herdr-app do terminal.keep --terminal <子の ID> --place right
+```
+
+- 2 人目からは、直前に並べた子に `pane.focus` してから `--place down` で並べる。ペインの大きさの目安（概ね 80 桁 24 行）と、司令塔 + 3 の上限は herdr と同じに扱う。
+- park を省かない。ペインかタブを持っている terminal に keep だけを打つと、フォーカスが移るだけで分割されない。
+- `hc run` に `herdr.space` や `herdr.tab` のラベルを付けない。付けると子が別のタブで開く。
+- herdr-app は見せ方を変えるためだけに使い、子の起動、待機、回収は hc で行う（`herdr-app --skill`）。herdr-app のコマンドが失敗しても委譲は止めず、ユーザーに `hc attach <名前>` で見られることを伝える。
+
 ## コマンド早見表
 
 | 目的 | コマンド |
