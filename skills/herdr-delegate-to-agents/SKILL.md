@@ -74,6 +74,7 @@ herdr のペインで進めるときは次の 2 点も守る。
 herdr pane layout --pane "$HERDR_PANE_ID"                              # area と各 rect を読む
 herdr pane split --current --direction right --cwd "$PWD" --no-focus   # .result.pane.pane_id を使う
 herdr agent start impl-1 --kind claude --pane <new-pane-id> -- --model opus --effort high
+herdr pane rename <new-pane-id> "実装 API impl-1"                       # ペインのタイトルに役割を出す
 ```
 
 - 分割方向は `pane layout` の形から決める。幅が広ければ right、高く狭ければ down。同方向に重ねると使い物にならない細さになる。
@@ -81,6 +82,7 @@ herdr agent start impl-1 --kind claude --pane <new-pane-id> -- --model opus --ef
 - 同一タブの既定上限は司令塔 + 3。超える必要があるときはユーザーに確認し、1 ペインが複数の役割を順に担う案も併せて示す。
 - `--cwd "$PWD"` を省略しない。司令塔と同じ場所で起動させる。
 - agent 名は `[a-z][a-z0-9_-]{0,31}` で、live agent 全体で一意。日本語の役割名は使えず、`reviewer` のような一般名は別ワークスペースのペインと衝突する。`impl-1`、`review-auth` のように役割と対象を組む。
+- 起動したら `herdr pane rename` でペインのタイトルに役割と agent 名を付ける（例: `実装 API impl-1`、`レビュー review-auth`）。ユーザーは画面を見ただけで、どのペインが何を担当しているかが分かる。タイトルは agent 名と違って日本語を使える。分担表で役割を割り当てた既存ペインにも付ける。
 - 起動直後は trust ダイアログなどで `blocked` になり `agent_not_ready` が返ることがある。名前は残るので `herdr agent read` で画面を確認し、ユーザーに知らせる。
 - 自分が作ったペインでも終わったら勝手に閉じない。ユーザーが経緯を追えることが、分割して起動してよい根拠になっている。
 
@@ -220,6 +222,7 @@ herdr-app do terminal.keep --terminal <子の ID> --place right
 | レイアウトを確認する | `herdr pane layout --pane "$HERDR_PANE_ID"` |
 | ペインを分割する | `herdr pane split --current --direction right --cwd "$PWD" --no-focus` |
 | 新しいエージェントを起動する | `herdr agent start <name> --kind <kind> --pane <pane_id> -- <agent-args>` |
+| ペインのタイトルに役割を付ける | `herdr pane rename <pane_id> "<役割> <name>"` |
 | 依頼を送って完了を待つ | `herdr agent prompt <target> "<依頼文>" --wait --timeout 900000` |
 | 複数へ同時に投入する | `herdr agent prompt <target> "<依頼文>" --wait --until working --until blocked --timeout 10000` |
 | 投入済みの相手を回収する | `herdr agent wait <target> --timeout 900000` |
