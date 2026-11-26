@@ -264,8 +264,10 @@ claude-code-skills/
 │   │   └── SKILL.md                 # Backlog課題作成スキル定義
 │   ├── backlog-git-workflow/
 │   │   └── SKILL.md                 # Backlog Gitワークフロースキル定義
-│   └── backlog-create-document/
-│       └── SKILL.md                 # Backlogドキュメント作成スキル定義
+│   ├── backlog-create-document/
+│   │   └── SKILL.md                 # Backlogドキュメント作成スキル定義
+│   └── herdr-delegate-to-agents/
+│       └── SKILL.md                 # herdr のエージェント分担スキル定義
 ├── agents/
 │   └── a11y-reviewer.md            # a11y-reviewer エージェント定義
 └── hooks/

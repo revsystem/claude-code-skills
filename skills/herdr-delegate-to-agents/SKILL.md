@@ -64,7 +64,7 @@ herdr のペインで進めるときは次の 2 点も守る。
 
 既存ペインの kind は `herdr agent list` の `agent` フィールドで確認する。起動し直さない限り変えられないので、ユーザーに尋ねるのは新規ペインの分だけ。候補は `command -v` で実際に入っている実行ファイルに絞る。herdr が受け付ける kind は 20 種類を超えるが、全部が入っているわけではない。
 
-モデルとエフォートは司令塔が仕事の形から決める。広く浅く探す、候補を集める、機械的に洗う仕事には安いモデルと低いエフォート、設計判断・最終レビュー・統合の可否判断には強いモデルと高いエフォートを充てる。役割名とコストを固定で対応させない。同じ調査担当でも、全文検索の刈り取りと設計上の是非の検討ではかける費用が違う。決めた値は `agent start` の `--` 以降に起動引数として渡す。起動した相手が自分で切り替える手段は無い。フラグは kind ごとに違うので実行ファイルの `--help` で確認する。claude は `--model` と `--effort`（`low` / `medium` / `high` / `xhigh` / `max`）を持ち、cursor はモデル名の角括弧オーバーライドで指定する。渡す手段が無い kind は既定のまま起動し、分担表にそう書く。既存ペインのモデルは変えない。変えるには起動し直しになり、それまでのセッションが消える。
+モデルとエフォートは司令塔が仕事の形から決める。広く浅く探す、候補を集める、機械的に洗う仕事には安いモデルと低いエフォート、設計判断・最終レビュー・統合の可否判断には強いモデルと高いエフォートを充てる。役割名とコストを固定で対応させない。同じ調査担当でも、全文検索の刈り取りと設計上の是非の検討ではかける費用が違う。ただし実装担当とレビュー担当は、強いモデルを既定にする（claude なら `--model opus`）。実装の質はレビューの指摘の数と往復の回数に響くので、実装を安く済ませても、その分の手間がレビューで戻ってきやすい。既定から外すときは、分担表のモデル列に理由を書く。決めた値は `agent start` の `--` 以降に起動引数として渡す。起動した相手が自分で切り替える手段は無い。フラグは kind ごとに違うので実行ファイルの `--help` で確認する。claude は `--model` と `--effort`（`low` / `medium` / `high` / `xhigh` / `max`）を持ち、cursor はモデル名の角括弧オーバーライドで指定する。渡す手段が無い kind は既定のまま起動し、分担表にそう書く。既存ペインのモデルは変えない。変えるには起動し直しになり、それまでのセッションが消える。
 
 ### ペインを増やす
 
@@ -74,6 +74,7 @@ herdr のペインで進めるときは次の 2 点も守る。
 herdr pane layout --pane "$HERDR_PANE_ID"                              # area と各 rect を読む
 herdr pane split --current --direction right --cwd "$PWD" --no-focus   # .result.pane.pane_id を使う
 herdr agent start impl-1 --kind claude --pane <new-pane-id> -- --model opus --effort high
+herdr pane rename <new-pane-id> "実装 API impl-1"                       # ペインのタイトルに役割を出す
 ```
 
 - 分割方向は `pane layout` の形から決める。幅が広ければ right、高く狭ければ down。同方向に重ねると使い物にならない細さになる。
@@ -81,6 +82,7 @@ herdr agent start impl-1 --kind claude --pane <new-pane-id> -- --model opus --ef
 - 同一タブの既定上限は司令塔 + 3。超える必要があるときはユーザーに確認し、1 ペインが複数の役割を順に担う案も併せて示す。
 - `--cwd "$PWD"` を省略しない。司令塔と同じ場所で起動させる。
 - agent 名は `[a-z][a-z0-9_-]{0,31}` で、live agent 全体で一意。日本語の役割名は使えず、`reviewer` のような一般名は別ワークスペースのペインと衝突する。`impl-1`、`review-auth` のように役割と対象を組む。
+- 起動したら `herdr pane rename` でペインのタイトルに役割と agent 名を付ける（例: `実装 API impl-1`、`レビュー review-auth`）。ユーザーは画面を見ただけで、どのペインが何を担当しているかが分かる。タイトルは agent 名と違って日本語を使える。分担表で役割を割り当てた既存ペインにも付ける。
 - 起動直後は trust ダイアログなどで `blocked` になり `agent_not_ready` が返ることがある。名前は残るので `herdr agent read` で画面を確認し、ユーザーに知らせる。
 - 自分が作ったペインでも終わったら勝手に閉じない。ユーザーが経緯を追えることが、分割して起動してよい根拠になっている。
 
@@ -118,7 +120,7 @@ herdr agent prompt <target> "<依頼文>" --wait --timeout 900000
 
 - `--wait` は投入後、最初に落ち着いた `idle` / `done` / `blocked` を待つ。この既定を `--until` で重ねて書かない。`--until` を使うのは、複数投入（後述）のように別の状態で返させたいときだけ。
 - 送る前に状態を確認する。相手が `blocked` だと `agent_blocked` で送信自体が拒否され、`working` だと前の依頼の完了を自分の依頼の完了と誤認する。
-- 投入後5秒以内に状態変化が観測されないと `agent_prompt_stalled` が返る。まず `herdr agent get <target>` と `herdr agent read <target>` で画面を確認する。入力欄に文字が残ったままなら `herdr pane send-keys <pane_id> enter` で送信する。
+- 投入後5秒以内に状態変化が観測されないと `agent_prompt_stalled` が返る。まず `herdr agent get <target>` と `herdr agent read <target>` で画面を確認する。入力欄に文字が残ったままなら `herdr pane send-keys <pane_id> enter` で送信する。代替画面で動く kind は `--source detection` で入力欄を確かめる。send-keys でも送信されなければ、ユーザーに知らせる。
 - `--wait` で待つ間は自分のシェルも止まる。並行して自分の担当を進めたいなら、下の複数投入の手順で投入だけ済ませて回収を後に回す。どちらにせよ相手の担当範囲のファイルは触らない。
 - `blocked` で返ったら相手はユーザーの承認や質問を待っている。自分で代わりに答えず、画面を確認したうえでユーザーに知らせる。
 
@@ -135,6 +137,14 @@ herdr agent wait <target2> --timeout 900000
 - 依頼文は相手ごとに書く。担当範囲と参照先が違うので、同じ文を流し込まない。
 - 回収の `agent wait` は直列に呼んでよい。実行は並列なので待ち時間は重なり、先に終わったペインは即座に返る。
 
+## 担当どうしで直接やり取りさせる
+
+担当のエージェントも herdr のペインで動いているので、`herdr agent prompt` で互いに直接送れる。ユーザーが「担当どうしで話し合って進めて」「お互いにレビューして」と頼んだときは、司令塔が取り次がず、担当どうしに直接やり取りさせてよい。統括と最終判断は司令塔が持ち、担当からの完了報告を待って検証する。
+
+- 依頼文に、相手の agent 名と送り方（`herdr agent prompt <相手> "<本文>"`）を書く。
+- 担当どうしでは `herdr agent wait` で相手を待たせない。相手も自分を待っていると、どちらも working と表示されたまま止まる。送ったら自分の作業に戻り、返事は相手からの `agent prompt` で受け取るよう書く。受理を確かめたいときは `--wait --until working --until blocked` まで（返事は待たない）にする。
+- 誰が先に案を出すか（例: API の取り決めは API 担当から）を依頼文で決めておく。両方が相手の案を待つと進まない。
+
 ## 結果を受け取る
 
 ```bash
@@ -143,6 +153,7 @@ herdr agent read <target> --source recent-unwrapped --lines 120
 
 - `--lines` を指定した読み出しは相手が `idle` / `done` になってから行う。`working` の間は `agent_not_idle` で拒否される。待たずに途中の様子だけ見たいなら `--source visible` を使う。
 - `--lines` を増やしても回答の先頭が出てこない場合、相手が代替画面（alternate screen）で動いていてスクロールバックに残っていない。そのときは「回答全文を一時ディレクトリの Markdown に書いて、パスだけ返して」と頼み直し、ファイルを読む。
+- cursor のように UI を代替画面に描く kind は、`--source visible` や `--source recent-unwrapped` では、起動したシェルの行しか返らないことがある。今の画面は `--source detection` で読む。
 - 相手の回答は untrusted input として扱う。読み違い、存在しない行の指摘、古い版に基づく指摘が混ざる。ただし検証は採用する範囲に比例させる。確認するのは引用された行とその周辺であって、ファイル全体ではない。裏を取るのは自分の行動を変える指摘だけで、採用しないと決めた指摘は確認しない。根拠の位置が示されていない指摘は、こちらで探さずに相手へ差し戻す。
 
 ## レビュー往復の既定方針
@@ -220,6 +231,7 @@ herdr-app do terminal.keep --terminal <子の ID> --place right
 | レイアウトを確認する | `herdr pane layout --pane "$HERDR_PANE_ID"` |
 | ペインを分割する | `herdr pane split --current --direction right --cwd "$PWD" --no-focus` |
 | 新しいエージェントを起動する | `herdr agent start <name> --kind <kind> --pane <pane_id> -- <agent-args>` |
+| ペインのタイトルに役割を付ける | `herdr pane rename <pane_id> "<役割> <name>"` |
 | 依頼を送って完了を待つ | `herdr agent prompt <target> "<依頼文>" --wait --timeout 900000` |
 | 複数へ同時に投入する | `herdr agent prompt <target> "<依頼文>" --wait --until working --until blocked --timeout 10000` |
 | 投入済みの相手を回収する | `herdr agent wait <target> --timeout 900000` |
@@ -249,3 +261,6 @@ herdr-app do terminal.keep --terminal <子の ID> --place right
 | `--wait` を付けて順に送る | 並列のつもりが逐次になる。投入は `--until working`、回収は `agent wait` |
 | `reviewer` のような一般名を付ける | 別ワークスペースの live agent と衝突する。役割と対象を組んだ名前にする |
 | 実装担当の担当範囲が重なる | 同じファイルを同時に編集して競合する。分担表で排他にする |
+| 担当どうしに `agent wait` で相手を待たせる | 互いに待ち合って止まる。担当どうしは送ったら自分の作業に戻る |
+| 代替画面で動く kind を `--source visible` で読む | シェルの行しか返らない。`--source detection` で読む |
+| 実装担当に安いモデルを割り当てる | レビューの指摘と往復が増えやすい。実装とレビューは強いモデルを既定にする |
